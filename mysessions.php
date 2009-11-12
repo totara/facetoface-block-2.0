@@ -193,24 +193,6 @@ if ('export' == $action) {
     exit;
 }
 
-
-// Get all Face-to-face signups from the DB
-$signups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursename, f.name,
-                                   f.id as facetofaceid, s.id as sessionid, s.location,
-                                   d.timestart, d.timefinish
-                              FROM {$CFG->prefix}facetoface_sessions_dates d
-                              JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
-                              JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
-                              JOIN {$CFG->prefix}facetoface_submissions su ON su.sessionid = s.id
-                              JOIN {$CFG->prefix}course c ON f.course = c.id
-                             WHERE d.timestart >= $startdate AND d.timefinish <= $enddate AND
-                                   su.userid = $USER->id AND su.timecancelled = 0
-                          ORDER BY $sortby");
-$nbsignups = 0;
-if ($signups and count($signups) > 0) {
-    $nbsignups = count($signups);
-}
-
 $pagetitle = format_string(get_string('listsessiondates', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
@@ -251,15 +233,6 @@ if ($nbdates > 0) {
 }
 else {
     print '<p>'.get_string('sessiondatesviewattendeeszero', 'block_facetoface').'</p>';
-}
-
-// Show sign-ups
-print '<h2>'.get_string('signedupin', 'block_facetoface').'</h2>';
-if ($nbsignups > 0) {
-    print_dates($signups, false);
-}
-else{
-    print '<p>'.get_string('signedupinzero', 'block_facetoface').'</p>';
 }
 
 print_footer();
