@@ -198,6 +198,9 @@ $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinsta
 $navigation = build_navigation($navlinks);
 print_header_simple($pagetitle, '', $navigation);
 
+$currenttab = 'attendees';
+include_once('tabs.php');
+print_box_start();
 // Date range form
 print '<h2>'.get_string('daterange', 'block_facetoface').'</h2>';
 print '<form method="get" action=""><p>';
@@ -235,6 +238,7 @@ else {
     print '<p>'.get_string('sessiondatesviewattendeeszero', 'block_facetoface').'</p>';
 }
 
+print_box_end();
 print_footer();
 
 ?>
