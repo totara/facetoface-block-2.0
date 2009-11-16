@@ -4,6 +4,7 @@ $string['allsessions'] = 'All sessions';
 $string['allfuturesessions'] = 'All future sessions';
 $string['apply'] = 'Apply';
 $string['daterange'] = 'Date range:';
+$string['didntattend'] = 'Didn\'t attend';
 $string['exportsessiondates'] = 'Export session dates';
 $string['finishdate'] = 'Finish date';
 $string['fixdates'] = 'Fix session dates';

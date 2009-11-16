@@ -55,7 +55,11 @@ function print_dates($dates, $includebookings, $includegrades=false) {
         
         // include the grades in the display
         if ($includegrades) {
-            print '<td>'.format_string($grade->grade).'</td>';
+            if ((int)$grade->grade > 0) {
+                print '<td>'.format_string($grade->grade).'</td>';
+            } else {
+                print '<td>'.get_string('didntattend','block_facetoface').'</td>';
+            }
         }
         print '</tr>';
     }
