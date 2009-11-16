@@ -16,8 +16,7 @@ function print_dates($dates, $includebookings, $includegrades=false) {
     print '<th><a href="'.$sortbylink.'coursename">'.get_string('course').'</a></th>';
     print '<th><a href="'.$sortbylink.'name">'.get_string('name').'</a></th>';
     print '<th><a href="'.$sortbylink.'location">'.get_string('location').'</a></th>';
-    print '<th><a href="'.$sortbylink.'timestart">'.get_string('startdate', 'block_facetoface').'</a></th>';
-    print '<th><a href="'.$sortbylink.'timefinish">'.get_string('finishdate', 'block_facetoface').'</a></th>';
+    print '<th><a href="'.$sortbylink.'timestart">'.get_string('date').'</a></th>';
     print '<th>'.get_string('time').'</th>';
     if ($includebookings) {
         print '<th><a href="'.$sortbylink.'nbbookings">'.get_string('nbbookings', 'block_facetoface').'</a></th>';
@@ -30,14 +29,15 @@ function print_dates($dates, $includebookings, $includegrades=false) {
     print '</tr>';
     $even = false; // used to colour rows
     foreach ($dates as $date) {
-        
+        // get the session dates
+        $sessiondates = facetoface_get_session_dates($date->sessionid);
         // include the grades in the display
         if ($includegrades) {
             $grade = facetoface_get_grade($USER->id, $date->courseid, $date->facetofaceid);
         }
 
         if ($even) {
-            print '<tr style="background-color: #CCCCCC">';
+            print '<tr style="background-color: #CCCCCC" valign="top">';
         }
         else {
             print '<tr>';
@@ -46,9 +46,16 @@ function print_dates($dates, $includebookings, $includegrades=false) {
         print '<td><a href="'.$courselink.$date->courseid.'">'.format_string($date->coursename).'</a></td>';
         print '<td><a href="'.$facetofacelink.$date->facetofaceid.'">'.format_string($date->name).'</a></td>';
         print '<td>'.format_string($date->location).'</td>';
-        print '<td>'.userdate($date->timestart, '%d %B %Y').'</td>';
-        print '<td>'.userdate($date->timefinish, '%d %B %Y').'</td>';
-        print '<td>'.userdate($date->timestart, '%I:%M %p').' - '.userdate($date->timefinish, '%I:%M %p').'</td>';
+        print '<td>';
+        foreach ($sessiondates as $sessiondate) {
+            print userdate($sessiondate->timestart, '%d %B %Y').'<br />';
+        }
+        print '</td>';
+        print '<td>';
+        foreach ($sessiondates as $sessiondate) {
+            print userdate($sessiondate->timestart, '%I:%M %p').' - '.userdate($sessiondate->timefinish, '%I:%M %p').'<br />';
+        }
+        print '</td>';
         if ($includebookings) {
             print '<td><a href="'.$attendeelink.$date->sessionid.'">'.(isset($date->nbbookings)? format_string($date->nbbookings) : 0).'</a></td>';
         }
