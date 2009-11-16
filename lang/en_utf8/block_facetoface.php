@@ -3,9 +3,11 @@
 $string['allsessions'] = 'All sessions';
 $string['allfuturesessions'] = 'All future sessions';
 $string['apply'] = 'Apply';
+$string['cancelled'] = 'cancelled';
 $string['daterange'] = 'Date range:';
-$string['didntattend'] = 'Didn\'t attend';
+$string['didntattend'] = 'didn\'t attend';
 $string['exportsessiondates'] = 'Export session dates';
+$string['enrolled'] = 'enrolled';
 $string['finishdate'] = 'Finish date';
 $string['fixdates'] = 'Fix session dates';
 $string['futurebookings'] = 'Future bookings';

@@ -38,14 +38,14 @@ if ('export' == $action) {
 // Get all Face-to-face signups from the DB
 $signups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursename, f.name,
                                    f.id as facetofaceid, s.id as sessionid, s.location,
-                                   d.timestart, d.timefinish
+                                   d.timestart, d.timefinish, su.timecancelled as status
                               FROM {$CFG->prefix}facetoface_sessions_dates d
                               JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
                               JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
                               JOIN {$CFG->prefix}facetoface_submissions su ON su.sessionid = s.id
                               JOIN {$CFG->prefix}course c ON f.course = c.id
                              WHERE d.timestart >= $startdate AND d.timefinish <= $enddate AND
-                                   su.userid = $USER->id AND su.timecancelled = 0
+                                   su.userid = $USER->id
                           ORDER BY $sortby");
 
 // Get all previous to the current time Face-to-face signups from the DB
@@ -96,7 +96,7 @@ print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'"
 // Show sign-ups
 print '<h2>'.get_string('futurebookings', 'block_facetoface').'</h2>';
 if ($nbsignups > 0) {
-    print_dates($groupeddates, false);
+    print_dates($groupeddates, false, false, true);
 }
 else{
     print '<p>'.get_string('signedupinzero', 'block_facetoface').'</p>';

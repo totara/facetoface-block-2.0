@@ -5,7 +5,7 @@ require_once('../../mod/facetoface/lib.php');
 /**
  * Print the session dates in a nicely formatted table.
  */
-function print_dates($dates, $includebookings, $includegrades=false) {
+function print_dates($dates, $includebookings, $includegrades=false, $includestatus=false) {
     global $sortbylink, $CFG, $USER;
 
     $courselink = $CFG->wwwroot.'/course/view.php?id=';
@@ -25,6 +25,11 @@ function print_dates($dates, $includebookings, $includegrades=false) {
     // include the grades in the display
     if ($includegrades) {
         print '<th><a href="'.$sortbylink.'grade">'.get_string('grade').'</a></th>';
+    }
+
+    // include the status (enrolled,cancelled) in the display
+    if ($includestatus) {
+        print '<th><a href="'.$sortbylink.'status">'.get_string('status').'</a></th>';
     }
     print '</tr>';
     $even = false; // used to colour rows
@@ -68,6 +73,14 @@ function print_dates($dates, $includebookings, $includegrades=false) {
                 print '<td>'.get_string('didntattend','block_facetoface').'</td>';
             }
         }
+
+        if ($includestatus) {
+            if ($date->status == 0) {
+                print '<td>'.get_string('enrolled','block_facetoface').'</td>';
+            } else {
+                print '<td>'.get_string('cancelled','block_facetoface').'</td>';
+            }
+        }
         print '</tr>';
     }
     print '</table>';
@@ -96,6 +109,11 @@ function group_session_dates($sessions) {
             if ($session->timefinish > $retarray[$session->sessionid]->timefinish) {
                 $retarray[$session->sessionid]->timefinish = $session->timefinish;
             }
+        }
+
+        // ensure that we have the correct status (enrolled, cancelled) for the submission
+        if (isset($session->status) and $session->status == 0) {
+           $retarray[$session->sessionid]->status = $session->status;
         }
     }
     return $retarray;
