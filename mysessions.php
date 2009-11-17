@@ -31,8 +31,8 @@ $sortbylink = "mysessions.php?{$urlparams}&amp;sortby=";
 
 // Get all Face-to-face session dates from the DB
 $records = get_records_sql("SELECT d.id, cm.id AS cmid, c.id AS courseid, c.fullname AS coursename,
-                                   f.name, f.id as facetofaceid, s.id as sessionid, s.location,
-                                   d.timestart, d.timefinish, su.nbbookings
+                                   c.idnumber as cidnumber, f.name, f.id as facetofaceid, s.id as sessionid,
+                                   s.location, d.timestart, d.timefinish, su.nbbookings
                               FROM {$CFG->prefix}facetoface_sessions_dates d
                               JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
                               JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
@@ -109,7 +109,7 @@ print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'"
 // Show all session dates
 print '<h2>'.get_string('sessiondatesviewattendees', 'block_facetoface').'</h2>';
 if ($nbdates > 0) {
-    print_dates($groupeddates, true);
+    print_dates($groupeddates, true, false, false, true);
 
     // Export form
     print '<h3>'.get_string('exportsessiondates', 'block_facetoface').'</h3>';

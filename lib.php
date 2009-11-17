@@ -5,7 +5,7 @@ require_once('../../mod/facetoface/lib.php');
 /**
  * Print the session dates in a nicely formatted table.
  */
-function print_dates($dates, $includebookings, $includegrades=false, $includestatus=false) {
+function print_dates($dates, $includebookings, $includegrades=false, $includestatus=false, $includecourseid=true) {
     global $sortbylink, $CFG, $USER;
 
     $courselink = $CFG->wwwroot.'/course/view.php?id=';
@@ -13,6 +13,12 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     $attendeelink = $CFG->wwwroot.'/mod/facetoface/attendees.php?s=';
 
     print '<table border="1" cellpadding="0" summary="'.get_string('sessiondatestable', 'block_facetoface').'"><tr>';
+
+    // include the course id in the display
+    if ($includecourseid) {
+        print '<th><a href="'.$sortbylink.'courseid">'.get_string('idnumbercourse').'</a></th>';
+    }
+
     print '<th><a href="'.$sortbylink.'coursename">'.get_string('course').'</a></th>';
     print '<th><a href="'.$sortbylink.'name">'.get_string('name').'</a></th>';
     print '<th><a href="'.$sortbylink.'location">'.get_string('location').'</a></th>';
@@ -31,6 +37,7 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     if ($includestatus) {
         print '<th><a href="'.$sortbylink.'status">'.get_string('status').'</a></th>';
     }
+
     print '</tr>';
     $even = false; // used to colour rows
     foreach ($dates as $date) {
@@ -48,6 +55,9 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
             print '<tr valign="top">';
         }
         $even = !$even;
+        if ($includecourseid) {
+            print '<td>'.$date->cidnumber.'</td>';
+        }
         print '<td><a href="'.$courselink.$date->courseid.'">'.format_string($date->coursename).'</a></td>';
         print '<td><a href="'.$facetofacelink.$date->facetofaceid.'">'.format_string($date->name).'</a></td>';
         print '<td>'.format_string($date->location).'</td>';
