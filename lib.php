@@ -5,7 +5,7 @@ require_once('../../mod/facetoface/lib.php');
 /**
  * Print the session dates in a nicely formatted table.
  */
-function print_dates($dates, $includebookings, $includegrades=false, $includestatus=false, $includecourseid=true) {
+function print_dates($dates, $includebookings, $includegrades=false, $includestatus=false, $includecourseid=false, $includetrainers=false) {
     global $sortbylink, $CFG, $USER;
 
     $courselink = $CFG->wwwroot.'/course/view.php?id=';
@@ -20,9 +20,15 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     }
 
     print '<th><a href="'.$sortbylink.'coursename">'.get_string('course').'</a></th>';
+
+    // include the course id in the display
+    if ($includetrainers) {
+        print '<th><a href="'.$sortbylink.'trainers">'.get_string('trainer','block_facetoface').'</a></th>';
+    }
+
     print '<th><a href="'.$sortbylink.'name">'.get_string('name').'</a></th>';
     print '<th><a href="'.$sortbylink.'location">'.get_string('location').'</a></th>';
-    print '<th><a href="'.$sortbylink.'timestart">'.get_string('date').'</a></th>';
+    print '<th><a href="'.$sortbylink.'timestart">'.get_string('date','block_facetoface').'</a></th>';
     print '<th>'.get_string('time').'</th>';
     if ($includebookings) {
         print '<th><a href="'.$sortbylink.'nbbookings">'.get_string('nbbookings', 'block_facetoface').'</a></th>';
@@ -43,9 +49,17 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     foreach ($dates as $date) {
         // get the session dates
         $sessiondates = facetoface_get_session_dates($date->sessionid);
+
         // include the grades in the display
         if ($includegrades) {
             $grade = facetoface_get_grade($USER->id, $date->courseid, $date->facetofaceid);
+        }
+
+        // include the trainers in the display
+        if ($includetrainers) {
+            $cm = get_record('course_modules', 'instance', $date->facetofaceid);
+            $context    = get_context_instance(CONTEXT_MODULE, $cm->id);
+            $trainers = get_users_by_capability($context, 'mod/facetoface:viewattendees', 'u.id, u.firstname, u.lastname', '', '', '', '', '', false);
         }
 
         if ($even) {
@@ -59,6 +73,18 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
             print '<td>'.$date->cidnumber.'</td>';
         }
         print '<td><a href="'.$courselink.$date->courseid.'">'.format_string($date->coursename).'</a></td>';
+
+        // include the trainer(s) in the display
+        if ($includetrainers) {
+            print '<td>';
+            if ($trainers and count($trainers) > 0) {
+                foreach ($trainers as $trainer) {
+                    print '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$trainer->id.'&amp;course='.$date->courseid.'">'.fullname($trainer).'</a><br />';
+                }
+            }
+            print '</td>';
+        }
+
         print '<td><a href="'.$facetofacelink.$date->facetofaceid.'">'.format_string($date->name).'</a></td>';
         print '<td>'.format_string($date->location).'</td>';
         print '<td>';

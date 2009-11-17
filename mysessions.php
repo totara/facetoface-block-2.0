@@ -109,7 +109,7 @@ print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'"
 // Show all session dates
 print '<h2>'.get_string('sessiondatesviewattendees', 'block_facetoface').'</h2>';
 if ($nbdates > 0) {
-    print_dates($groupeddates, true, false, false, true);
+    print_dates($groupeddates, true, false, false, true, true);
 
     // Export form
     print '<h3>'.get_string('exportsessiondates', 'block_facetoface').'</h3>';
