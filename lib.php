@@ -45,7 +45,7 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
             print '<tr style="background-color: #CCCCCC" valign="top">';
         }
         else {
-            print '<tr>';
+            print '<tr valign="top">';
         }
         $even = !$even;
         print '<td><a href="'.$courselink.$date->courseid.'">'.format_string($date->coursename).'</a></td>';
@@ -114,6 +114,44 @@ function group_session_dates($sessions) {
         // ensure that we have the correct status (enrolled, cancelled) for the submission
         if (isset($session->status) and $session->status == 0) {
            $retarray[$session->sessionid]->status = $session->status;
+        }
+    }
+    return $retarray;
+}
+
+/**
+ * Separate out the dates from $sessions that finished before the current time
+ * */
+function past_session_dates($sessions) {
+
+    $retarray = array();
+    $timenow = time();
+
+    if (!empty($sessions)) {
+        foreach ($sessions as $session) {
+            // check if the finish time is before the current time
+            if ($session->timefinish < $timenow) {
+                $retarray[$session->sessionid] = clone($session);
+            }
+        }
+    }
+    return $retarray;
+}
+
+/**
+ * Separate out the dates from $sessions that finish after the current time
+ * */
+function future_session_dates($sessions) {
+
+    $retarray = array();
+    $timenow = time();
+
+    if (!empty($sessions)) {
+        foreach ($sessions as $session) {
+            // check if the finish time is after the current time
+            if ($session->timefinish >= $timenow) {
+                $retarray[$session->sessionid] = clone($session);
+            }
         }
     }
     return $retarray;

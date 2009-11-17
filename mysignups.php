@@ -48,33 +48,26 @@ $signups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursen
                                    su.userid = $USER->id
                           ORDER BY $sortby");
 
-// Get all previous to the current time Face-to-face signups from the DB
-$pastsignups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursename, f.name,
-                                   f.id as facetofaceid, s.id as sessionid, s.location,
-                                   d.timestart, d.timefinish
-                              FROM {$CFG->prefix}facetoface_sessions_dates d
-                              JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
-                              JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
-                              JOIN {$CFG->prefix}facetoface_submissions su ON su.sessionid = s.id
-                              JOIN {$CFG->prefix}course c ON f.course = c.id
-                             WHERE d.timefinish <= $timenow AND
-                                   su.userid = $USER->id AND su.timecancelled = 0
-                          ORDER BY $sortby");
-$nbsignups = 0;
-if ($signups and count($signups) > 0) {
-    $nbsignups = count($signups);
-}
-
-// include past bookings
-$nbpastsignups = 0;
-if ($pastsignups and count($pastsignups) > 0) {
-    $nbpastsignups = count($pastsignups);
-}
-
 // format the session and dates to only show one booking where they span multiple dates
 // i.e. multiple days startdate = firstday, finishdate = last day
-$groupeddates = group_session_dates($signups);
-$pastgroupeddates = group_session_dates($pastsignups);
+$groupeddates = array();
+if ($signups and count($signups > 0)) {
+    $groupeddates = group_session_dates($signups);
+}
+
+// out of the results separate out the future sessions
+$futuresessions = future_session_dates($groupeddates);
+$nbfuture = 0;
+if ($futuresessions and count($futuresessions) > 0) {
+    $nbfuture = count($futuresessions);
+}
+
+// and the past sessions
+$pastsessions = past_session_dates($groupeddates);
+$nbpast = 0;
+if ($pastsessions and count($pastsessions) > 0) {
+    $nbpast = count($pastsessions);
+}
 
 $pagetitle = format_string(get_string('listsessiondates', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
@@ -95,8 +88,8 @@ print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'"
 
 // Show sign-ups
 print '<h2>'.get_string('futurebookings', 'block_facetoface').'</h2>';
-if ($nbsignups > 0) {
-    print_dates($groupeddates, false, false, true);
+if ($nbfuture > 0) {
+    print_dates($futuresessions, false, false, true);
 }
 else{
     print '<p>'.get_string('signedupinzero', 'block_facetoface').'</p>';
@@ -104,8 +97,8 @@ else{
 
 // Show past bookings
 print '<h2>'.get_string('pastbookings', 'block_facetoface').'</h2>';
-if ($nbpastsignups > 0) {
-    print_dates($pastgroupeddates, false, true);
+if ($nbpast > 0) {
+    print_dates($pastsessions, false, true);
 }
 else{
     print '<p>'.get_string('signedupinzero', 'block_facetoface').'</p>';
