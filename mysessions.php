@@ -107,7 +107,7 @@ print_date_selector('endday', 'endmonth', 'endyear', $enddate);
 print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'" /></p></form>';
 
 // Show all session dates
-print '<h2>'.get_string('sessiondatesviewattendees', 'block_facetoface').'</h2>';
+print '<h2>'.get_string('sessiondatesview', 'block_facetoface').'</h2>';
 if ($nbdates > 0) {
     print_dates($groupeddates, true, false, false, true, true);
 
