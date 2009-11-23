@@ -29,7 +29,7 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     print '<th><a href="'.$sortbylink.'name">'.get_string('name').'</a></th>';
     print '<th><a href="'.$sortbylink.'location">'.get_string('location').'</a></th>';
     print '<th><a href="'.$sortbylink.'timestart">'.get_string('date','block_facetoface').'</a></th>';
-    print '<th>'.get_string('time').'</th>';
+    print '<th>'.get_string('time', 'block_facetoface').'</th>';
     if ($includebookings) {
         print '<th><a href="'.$sortbylink.'nbbookings">'.get_string('nbbookings', 'block_facetoface').'</a></th>';
     }
@@ -104,17 +104,17 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
         // include the grades in the display
         if ($includegrades) {
             if ((int)$grade->grade > 0) {
-                print '<td>'.format_string($grade->grade).'</td>';
+                print '<td><a href="'.$CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session='.$date->sessionid.'&amp;userid='.$date->userid.'">'.format_string($grade->grade).'</a></td>';
             } else {
-                print '<td>'.get_string('didntattend','block_facetoface').'</td>';
+                print '<td><a href="'.$CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session='.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('didntattend','block_facetoface').'</a></td>';
             }
         }
 
         if ($includestatus) {
             if ($date->status == 0) {
-                print '<td>'.get_string('enrolled','block_facetoface').'</td>';
+                print '<td><a href="'.$CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session='.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('enrolled','block_facetoface').'</a></td>';
             } else {
-                print '<td>'.get_string('cancelled','block_facetoface').'</td>';
+                print '<td><a href="'.$CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session='.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('cancelled','block_facetoface').'</a></td>';
             }
         }
         print '</tr>';

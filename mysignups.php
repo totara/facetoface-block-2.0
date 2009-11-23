@@ -22,6 +22,8 @@ $sortby = optional_param('sortby', 'timestart', PARAM_ALPHA); // column to sort 
 $action = optional_param('action',          '', PARAM_ALPHA); // one of: '', export
 $format = optional_param('format',       'ods', PARAM_ALPHA); // one of: ods, xls
 
+$userid = optional_param('userid', PARAM_INT);
+
 $startdate = make_timestamp($startyear, $startmonth, $startday);
 $enddate = make_timestamp($endyear, $endmonth, $endday);
 
@@ -38,7 +40,7 @@ if ('export' == $action) {
 // Get all Face-to-face signups from the DB
 $signups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursename, f.name,
                                    f.id as facetofaceid, s.id as sessionid, s.location,
-                                   d.timestart, d.timefinish, su.timecancelled as status
+                                   d.timestart, d.timefinish, su.userid, su.timecancelled as status
                               FROM {$CFG->prefix}facetoface_sessions_dates d
                               JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
                               JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
