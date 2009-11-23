@@ -23,6 +23,10 @@ $action = optional_param('action',          '', PARAM_ALPHA); // one of: '', exp
 $format = optional_param('format',       'ods', PARAM_ALPHA); // one of: ods, xls
 
 $userid = optional_param('userid', PARAM_INT);
+if (!isset($userid)) {
+    $userid = $USER->id;
+}
+$user = get_record('user','id',$userid);
 
 $startdate = make_timestamp($startyear, $startmonth, $startday);
 $enddate = make_timestamp($endyear, $endmonth, $endday);
@@ -47,7 +51,7 @@ $signups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursen
                               JOIN {$CFG->prefix}facetoface_submissions su ON su.sessionid = s.id
                               JOIN {$CFG->prefix}course c ON f.course = c.id
                              WHERE d.timestart >= $startdate AND d.timefinish <= $enddate AND
-                                   su.userid = $USER->id
+                                   su.userid = $user->id
                           ORDER BY $sortby");
 
 // format the session and dates to only show one booking where they span multiple dates
