@@ -57,7 +57,7 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
 
         // include the trainers in the display
         if ($includetrainers) {
-            $cm = get_record('course_modules', 'instance', $date->facetofaceid);
+            $cm = get_record('course_modules', 'course', $date->courseid, 'instance', $date->facetofaceid);
             $context    = get_context_instance(CONTEXT_MODULE, $cm->id);
             $trainers = get_users_by_capability($context, 'mod/facetoface:viewattendees', 'u.id, u.firstname, u.lastname', '', '', '', '', '', false);
         }
