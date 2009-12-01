@@ -22,7 +22,7 @@ $sortby = optional_param('sortby', 'timestart', PARAM_ALPHA); // column to sort 
 $action = optional_param('action',          '', PARAM_ALPHA); // one of: '', export
 $format = optional_param('format',       'ods', PARAM_ALPHA); // one of: ods, xls
 
-$search = optional_param('search', PARAM_ALPHA); // search string
+$search = optional_param('search', '', PARAM_TEXT); // search string
 
 $startdate = make_timestamp($startyear, $startmonth, $startday);
 $enddate = make_timestamp($endyear, $endmonth, $endday);
