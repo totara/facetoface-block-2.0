@@ -253,3 +253,83 @@ function export_spreadsheet($dates, $format, $includebookings) {
 
     $workbook->close();
 }
+
+/**
+ *  Return a list of users who match the given search
+ *  Fields searched are:
+ *  - username,
+ *  - firstname, lastname as fullname,
+ *  - email
+ */
+function get_users_search($search) {
+    global $CFG;
+
+    //to allow case-insensitive search for postgesql
+    if ($CFG->dbfamily == 'postgres') {
+        $LIKE = 'ILIKE';
+    } else {
+        $LIKE = 'LIKE';
+    }
+
+    $usernamesearch = '';
+    $emailsearch = '';
+    $fullnamesearch = '';
+    $firstnamesearch = '';
+    $lastnamesearch = '';
+
+    $searchvalues = split(' ',trim($search));
+    $sort='firstname, lastname, username, email ASC';
+
+    foreach ($searchvalues as $searchterm) {
+
+        if ($usernamesearch) {
+            $usernamesearch .= ' AND ';
+        }
+        if ($emailsearch) {
+            $emailsearch .= ' AND ';
+        }
+        if (count($searchvalues) >= 2) {
+            if ($fullnamesearch) {
+                $fullnamesearch .= " $searchterm";
+            } else {
+                $fullnamesearch .= sql_fullname() ." $LIKE '%$searchterm";
+            }
+        }
+        if (count($searchvalues) < 2) {
+            $firstnamesearch .= ' firstname ' . $LIKE .' \'%'. $searchterm .'%\' ';
+            $lastnamesearch .= ' lastname ' . $LIKE .' \'%'. $searchterm .'%\' ';
+        }
+
+        $usernamesearch .= ' username ' . $LIKE .' \'%'. $searchterm .'%\' ';
+        $emailsearch .= ' email ' . $LIKE .' \'%'. $searchterm .'%\' ';
+    }
+
+    // if fullnamesearch append the end for the string
+    if ($fullnamesearch) {
+        $fullnamesearch .= '%\'';
+    }
+
+    $sql = "SELECT u.*
+            FROM {$CFG->prefix}user u
+            WHERE (( $usernamesearch ) OR ( $emailsearch )) ";
+
+    if ($fullnamesearch) {
+        $sql .= " OR ( $fullnamesearch ) ";
+    }
+
+    if ($firstnamesearch) {
+        $sql .= " OR ( $firstnamesearch ) ";
+    }
+
+    if ($lastnamesearch) {
+        $sql .= " OR ( $lastnamesearch ) ";
+    }
+
+    $sql .= " ORDER BY " . $sort;
+
+    if ($records = get_records_sql($sql)) {
+        return $records;
+    } else {
+        return array();
+    }
+}

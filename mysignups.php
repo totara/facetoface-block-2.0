@@ -32,7 +32,7 @@ $startdate = make_timestamp($startyear, $startmonth, $startday);
 $enddate = make_timestamp($endyear, $endmonth, $endday);
 
 $urlparams = "startyear=$startyear&amp;startmonth=$startmonth&amp;startday=$startday&amp;";
-$urlparams .= "endyear=$endyear&amp;endmonth=$endmonth&amp;endday=$endday";
+$urlparams .= "endyear=$endyear&amp;endmonth=$endmonth&amp;endday=$endday&amp;userid=$userid";
 $sortbylink = "mysignups.php?{$urlparams}&amp;sortby=";
 
 // Process actions if any
@@ -90,6 +90,7 @@ print '<form method="get" action=""><p>';
 print_date_selector('startday', 'startmonth', 'startyear', $startdate);
 print ' to ';
 print_date_selector('endday', 'endmonth', 'endyear', $enddate);
+print ' <input type="hidden" value="'.$userid.'" name="userid" />';
 print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'" /></p></form>';
 
 // Show sign-ups
