@@ -333,3 +333,29 @@ function get_users_search($search) {
         return array();
     }
 }
+
+/**
+ * Add the location info
+ */
+function add_location_info(&$sessions)
+{
+    global $CFG;
+
+    if (!$sessions) {
+        return;
+    }
+
+    $alllocations = get_records_sql("SELECT d.sessionid, d.data
+                                       FROM {$CFG->prefix}facetoface_session_data d
+                                       JOIN {$CFG->prefix}facetoface_session_field f ON f.id = d.fieldid
+                                      WHERE f.shortname = 'location'");
+
+    foreach ($sessions as $session) {
+        if (!empty($alllocations[$session->sessionid])) {
+            $session->location = $alllocations[$session->sessionid]->data;
+        }
+        else {
+            $session->location = '';
+        }
+    }
+}

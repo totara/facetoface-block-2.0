@@ -40,7 +40,7 @@ if ($search) {
     // Get all Face-to-face session dates from the DB
     $records = get_records_sql("SELECT d.id, cm.id AS cmid, c.id AS courseid, c.fullname AS coursename,
                                        c.idnumber as cidnumber, f.name, f.id as facetofaceid, s.id as sessionid,
-                                       s.location, d.timestart, d.timefinish, su.nbbookings
+                                       d.timestart, d.timefinish, su.nbbookings
                                   FROM {$CFG->prefix}facetoface_sessions_dates d
                                   JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
                                   JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
@@ -57,6 +57,8 @@ if ($search) {
                                  WHERE d.timestart >= $startdate AND d.timefinish <= $enddate
                                        AND m.name = 'facetoface'
                               ORDER BY $sortby");
+
+    add_location_info($records);
 }
 
 // Only keep the sessions for which this user can see attendees

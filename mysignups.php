@@ -43,7 +43,7 @@ if ('export' == $action) {
 
 // Get all Face-to-face signups from the DB
 $signups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursename, f.name,
-                                   f.id as facetofaceid, s.id as sessionid, s.location,
+                                   f.id as facetofaceid, s.id as sessionid,
                                    d.timestart, d.timefinish, su.userid, su.timecancelled as status
                               FROM {$CFG->prefix}facetoface_sessions_dates d
                               JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
@@ -53,6 +53,7 @@ $signups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursen
                              WHERE d.timestart >= $startdate AND d.timefinish <= $enddate AND
                                    su.userid = $user->id
                           ORDER BY $sortby");
+add_location_info($signups);
 
 // format the session and dates to only show one booking where they span multiple dates
 // i.e. multiple days startdate = firstday, finishdate = last day
