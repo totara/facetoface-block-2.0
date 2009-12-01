@@ -104,6 +104,7 @@ $pagetitle = format_string(get_string('listsessiondates', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
 print_header_simple($pagetitle, '', $navigation);
+print_box_start();
 
 // show tabs
 $currenttab = 'attendees';
@@ -170,6 +171,5 @@ echo '<div class="usersearch">';
 echo '</form>';
 echo '</div>';
 
+print_box_end();
 print_footer();
-
-?>
