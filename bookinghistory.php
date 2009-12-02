@@ -1,6 +1,7 @@
 <?php
 
 // Displays booking history for the current user
+// ToDo: Add capability testing to limit non-admin user from seeing all booking histories
 
 require_once '../../config.php';
 require_once('lib.php');
@@ -10,15 +11,25 @@ require_login();
 $sid        = required_param('session', PARAM_INT);
 $userid     = optional_param('userid', PARAM_INT);
 
-if (!isset($userid)) {
-    $userid = $USER->id;
-}
-$user = get_record('user','id',$userid);
+    // get all the required records
+    if (!isset($userid)) {
+        $userid = $USER->id;
+    }
 
-// get all the required records
-$session = get_record('facetoface_sessions','id',$sid);
-$facetoface = get_record('facetoface','id', $session->facetoface);
-$course = get_record('course','id',$facetoface->course);
+    if (! $user = get_record('user','id',$userid)) {
+        error('Invalid user id');
+    }
+    if (! $session = facetoface_get_session($sid)) {
+        error('Invalid session id');
+    }
+
+    if(! $facetoface = get_record('facetoface','id', $session->facetoface)) {
+        error('Invalid facetoface id');
+    }
+
+    if (! $course = get_record('course','id',$facetoface->course)) {
+        error('Invalid course id');
+    }
 
 $pagetitle = format_string(get_string('bookinghistory', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
@@ -26,9 +37,9 @@ $navigation = build_navigation($navlinks);
 print_header_simple($pagetitle, '', $navigation);
 
 // Get signups from the DB
-$bookings = get_records_sql("SELECT su.timecreated, su.timecancelled as status, su.grade, su.timegraded,
+$bookings = get_records_sql("SELECT su.timecreated, su.timecancelled as status, su.grade, su.timegraded, su.cancelreason,
                                    c.id as courseid, c.fullname AS coursename,
-                                   f.name, f.id as facetofaceid, s.id as sessionid, s.location,
+                                   f.name, f.id as facetofaceid, s.id as sessionid,
                                    d.id, d.timestart, d.timefinish
                               FROM {$CFG->prefix}facetoface_sessions_dates d
                               JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
@@ -52,100 +63,52 @@ if (isset($session) and isset($facetoface) and isset($course)) {
         echo "<br />";
     }
 
-    // print the booking information
-    $table = '';
-    $table .= '<table align="center" cellpadding="3" cellspacing="0" width="600" style="border-color:#DDDDDD; border-width:1px 1px 1px 1px; border-style:solid;">';
-    $table .= '<tr>';
-    $table .= '<th class="header" align="left">&nbsp;'.get_string('user').'</th>';
-    $table .= '<td><a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$course->id.'">'.fullname($user).'</a></td>';
-    $table .= '</tr>';
-    $table .= '<tr>';
-    $table .= '<th class="header" align="left">&nbsp;'.get_string('course').'</th>';
-    $table .= '<td>'.format_string($course->fullname).'</td>';
-    $table .= '</tr>';
-    $table .= '<tr>';
-    $table .= '<th class="header" align="left">&nbsp;'.get_string('name').'</th>';
-    $table .= '<td>'.format_string($facetoface->name).'</td>';
-    $table .= '</tr>';
-    $table .= '<tr>';
-    $table .= '<th class="header" align="left">&nbsp;'.get_string('location').'</th>';
-    $table .= '<td>'.format_string($session->location).'</td>';
-    $table .= '</tr>';
-    $table .= '<tr>';
-    $table .= '<th class="header" align="left">&nbsp;'.get_string('date','block_facetoface').'</th>';
-    $table .= '<td>';
-    foreach ($sessiontimes as $session) {
-        $table .= userdate($session->timestart, '%d %B %Y').'<br />';
-    }
-    $table .= '</td>';
-    $table .= '</tr>';
-    $table .= '<tr>';
-    $table .= '<th class="header" align="left">&nbsp;'.get_string('time','block_facetoface').'</th>';
-    $table .= '<td>';
-    foreach ($sessiontimes as $session) {
-        $table .= userdate($session->timestart, '%I:%M %p').' - '.userdate($session->timefinish, '%I:%M %p').'<br />';
-    }
-    $table .= '</td>';
-    $table .= '</tr>';
-
-    $table .= '</table>';
-
-    echo $table;
-    echo '<br />';
+    // print the session information
+    facetoface_print_session($session, false);
 
     // print the booking history
     if ($bookings and count($bookings) > 0) {
 
-        $table = '<table align="center" cellpadding="3" cellspacing="0" width="600" style="border-color:#DDDDDD; border-width:1px 1px 1px 1px; border-style:solid;
-                          summary="'.get_string('bookinghistorytable', 'block_facetoface').'">';
+        $table = new object();
+        $table->summary = get_string('sessionsdetailstablesummary', 'facetoface');
+        $table->class = 'f2fsession';
+        $table->width = '50%';
+        $table->align = array('right', 'left');
+
         foreach ($bookings as $booking) {
-            $table .= '<tr>';
             if (isset($booking->status) and $booking->status == 0) {
-                $table .= '<td>'.get_string('enrolled', 'block_facetoface').'</td>';
-                $table .= '<td>'.userdate($booking->timecreated, get_string('strftimedatetime')).'</td>';
+                $table->data[] = array(get_string('enrolled', 'block_facetoface'), userdate($booking->timecreated, get_string('strftimedatetime')));
             } else {
                 // if the booking status is cancelled print out the original enrollment date (timecreated) too
-                $table .= '<tr>';
-                    $table .= '<td>'.get_string('enrolled', 'block_facetoface').'</td>';
-                    $table .= '<td>'.userdate($booking->timecreated, get_string('strftimedatetime')).'</td>';
-                $table .= '</tr>';
-                $table .= '<tr>';
-                    $table .= '<td>'.get_string('cancelled', 'block_facetoface').'</td>';
-                $table .= '<td>'.userdate($booking->status, get_string('strftimedatetime')).'</td>';
+                $table->data[] = array(get_string('enrolled', 'block_facetoface'),userdate($booking->timecreated, get_string('strftimedatetime')));
+                $table->data[] = array(get_string('cancelled', 'block_facetoface'),userdate($booking->status, get_string('strftimedatetime')), $booking->cancelreason);
             }
-            /* placeholder for the reason for cancellation field
-             * $table .= '<td>'.get_string('reason', 'block_facetoface').'</td>';*/
-            $table .= '</tr>';
         }
 
         // if the grade is 100 mark the user as 'attended'
         if ($grade = facetoface_get_grade($user->id, $course->id, $facetoface->id) and $grade->grade == 100) {
-            $table .= '<tr>';
-            $table .= '<td>'.get_string('attended', 'block_facetoface').'</td>';
-
             // just use the first session time of the multi-session facetoface
             if ($sessiontimes and count($sessiontimes) > 0) {
                 $firstsession = current(array_values($sessiontimes));
-                $table .= '<td>'.userdate($firstsession->timestart, get_string('strftimedate')).'</td>';
             }
-
-            $table .= '<tr>';
+            $table->data[] = array(get_string('attended', 'block_facetoface'),userdate($firstsession->timestart, get_string('strftimedate'))) ;
         }
-        $table .= '</table>';
 
-        echo $table;
     } else {
-        $table = '<table align="center" cellpadding="3" cellspacing="0" width="600" style="border-color:#DDDDDD; border-width:1px 1px 1px 1px; border-style:solid;
-                          summary="'.get_string('bookinghistorytable', 'block_facetoface').'">';
-        if ($user->id != $USER->id) {
-           $table .= '<tr><td>'.get_string('nobookinghistoryfor','block_facetoface',fullname($user)).'</td></tr>';
-        } else {
-           $table .= '<tr><td>'.get_string('nobookinghistory','block_facetoface').'</td></tr>';
-        }
-        $table .= '</table>';
+        $table = new object();
+        $table->summary = get_string('sessionsdetailstablesummary', 'facetoface');
+        $table->class = 'f2fsession';
+        $table->width = '50%';
+        $table->align = array('center');
 
-        echo $table;
+        if ($user->id != $USER->id) {
+           $table->data[] = array(get_string('nobookinghistoryfor','block_facetoface',fullname($user)));
+        } else {
+           $table->data[] = array(get_string('nobookinghistory','block_facetoface'));
+        }
     }
+
+    print_table($table);
 }
 print_footer();
 ?>

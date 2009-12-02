@@ -52,7 +52,7 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
 
         // include the grades in the display
         if ($includegrades) {
-            $grade = facetoface_get_grade($USER->id, $date->courseid, $date->facetofaceid);
+            $grade = facetoface_get_grade($date->userid, $date->courseid, $date->facetofaceid);
         }
 
         // include the trainers in the display
