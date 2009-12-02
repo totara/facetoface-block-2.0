@@ -22,7 +22,7 @@ $sortby = optional_param('sortby', 'timestart', PARAM_ALPHA); // column to sort 
 $action = optional_param('action',          '', PARAM_ALPHA); // one of: '', export
 $format = optional_param('format',       'ods', PARAM_ALPHA); // one of: ods, xls
 
-$search = optional_param('search', PARAM_ALPHA); // search string
+$search = optional_param('search', '', PARAM_TEXT); // search string
 
 $startdate = make_timestamp($startyear, $startmonth, $startday);
 $enddate = make_timestamp($endyear, $endmonth, $endday);
@@ -104,6 +104,7 @@ $pagetitle = format_string(get_string('listsessiondates', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
 print_header_simple($pagetitle, '', $navigation);
+print_box_start();
 
 // show tabs
 $currenttab = 'attendees';
@@ -170,6 +171,5 @@ echo '<div class="usersearch">';
 echo '</form>';
 echo '</div>';
 
+print_box_end();
 print_footer();
-
-?>
