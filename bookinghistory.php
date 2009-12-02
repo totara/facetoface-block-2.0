@@ -49,66 +49,63 @@ $bookings = get_records_sql("SELECT su.timecreated, su.timecancelled as status, 
                               WHERE su.userid = $user->id AND su.sessionid = $session->id AND f.id = $session->facetoface
                               ORDER BY su.timecreated ASC");
 
-// Get session times from the DB
-$sessiontimes = get_records_sql("SELECT id, timestart, timefinish FROM {$CFG->prefix}facetoface_sessions_dates WHERE sessionid = $session->id ORDER BY timestart ASC");
+// Get session times
+$sessiontimes = facetoface_get_session_dates($session->id);
 
-// as long as the session, facetoface activity and course exists 
-if (isset($session) and isset($facetoface) and isset($course)) {
+if ($user->id != $USER->id) {
+    $fullname = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$course->id.'">'.fullname($user).'</a>';
+    $heading = get_string('bookinghistoryfor', 'block_facetoface', $fullname);
+    print_heading($heading, 'center');
+} else {
+    echo "<br />";
+}
+
+// print the session information
+facetoface_print_session($session, false);
+
+// print the booking history
+if ($bookings and count($bookings) > 0) {
+
+    $table = new object();
+    $table->summary = get_string('sessionsdetailstablesummary', 'facetoface');
+    $table->class = 'f2fsession';
+    $table->width = '50%';
+    $table->align = array('right', 'left');
+
+    foreach ($bookings as $booking) {
+        if (isset($booking->status) and $booking->status == 0) {
+            $table->data[] = array(get_string('enrolled', 'block_facetoface'), userdate($booking->timecreated, get_string('strftimedatetime')));
+        } else {
+            // if the booking status is cancelled print out the original enrollment date (timecreated) too
+            $table->data[] = array(get_string('enrolled', 'block_facetoface'),userdate($booking->timecreated, get_string('strftimedatetime')));
+            $table->data[] = array(get_string('cancelled', 'block_facetoface'),userdate($booking->status, get_string('strftimedatetime')), $booking->cancelreason);
+        }
+    }
+
+    // if the grade is 100 mark the user as 'attended'
+    if ($grade = facetoface_get_grade($user->id, $course->id, $facetoface->id) and $grade->grade == 100) {
+        // just use the first session time of the multi-session facetoface
+        if ($sessiontimes and count($sessiontimes) > 0) {
+            $firstsession = current(array_values($sessiontimes));
+        }
+        $table->data[] = array(get_string('attended', 'block_facetoface'),userdate($firstsession->timestart, get_string('strftimedate'))) ;
+    }
+
+} else {
+    // no booking history available
+    $table = new object();
+    $table->summary = get_string('sessionsdetailstablesummary', 'facetoface');
+    $table->class = 'f2fsession';
+    $table->width = '50%';
+    $table->align = array('center');
 
     if ($user->id != $USER->id) {
-        $fullname = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$course->id.'">'.fullname($user).'</a>';
-        $heading = get_string('bookinghistoryfor', 'block_facetoface', $fullname);
-        print_heading($heading, 'center');
+       $table->data[] = array(get_string('nobookinghistoryfor','block_facetoface',fullname($user)));
     } else {
-        echo "<br />";
+       $table->data[] = array(get_string('nobookinghistory','block_facetoface'));
     }
-
-    // print the session information
-    facetoface_print_session($session, false);
-
-    // print the booking history
-    if ($bookings and count($bookings) > 0) {
-
-        $table = new object();
-        $table->summary = get_string('sessionsdetailstablesummary', 'facetoface');
-        $table->class = 'f2fsession';
-        $table->width = '50%';
-        $table->align = array('right', 'left');
-
-        foreach ($bookings as $booking) {
-            if (isset($booking->status) and $booking->status == 0) {
-                $table->data[] = array(get_string('enrolled', 'block_facetoface'), userdate($booking->timecreated, get_string('strftimedatetime')));
-            } else {
-                // if the booking status is cancelled print out the original enrollment date (timecreated) too
-                $table->data[] = array(get_string('enrolled', 'block_facetoface'),userdate($booking->timecreated, get_string('strftimedatetime')));
-                $table->data[] = array(get_string('cancelled', 'block_facetoface'),userdate($booking->status, get_string('strftimedatetime')), $booking->cancelreason);
-            }
-        }
-
-        // if the grade is 100 mark the user as 'attended'
-        if ($grade = facetoface_get_grade($user->id, $course->id, $facetoface->id) and $grade->grade == 100) {
-            // just use the first session time of the multi-session facetoface
-            if ($sessiontimes and count($sessiontimes) > 0) {
-                $firstsession = current(array_values($sessiontimes));
-            }
-            $table->data[] = array(get_string('attended', 'block_facetoface'),userdate($firstsession->timestart, get_string('strftimedate'))) ;
-        }
-
-    } else {
-        $table = new object();
-        $table->summary = get_string('sessionsdetailstablesummary', 'facetoface');
-        $table->class = 'f2fsession';
-        $table->width = '50%';
-        $table->align = array('center');
-
-        if ($user->id != $USER->id) {
-           $table->data[] = array(get_string('nobookinghistoryfor','block_facetoface',fullname($user)));
-        } else {
-           $table->data[] = array(get_string('nobookinghistory','block_facetoface'));
-        }
-    }
-
-    print_table($table);
 }
+print_table($table);
+
 print_footer();
 ?>
