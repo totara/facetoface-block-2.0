@@ -11,6 +11,7 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     $courselink = $CFG->wwwroot.'/course/view.php?id=';
     $facetofacelink = $CFG->wwwroot.'/mod/facetoface/view.php?f=';
     $attendeelink = $CFG->wwwroot.'/mod/facetoface/attendees.php?s=';
+    $bookinghistorylink = $CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session=';
 
     print '<table border="1" cellpadding="0" summary="'.get_string('sessiondatestable', 'block_facetoface').'"><tr>';
 
@@ -104,17 +105,17 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
         // include the grades in the display
         if ($includegrades) {
             if ((int)$grade->grade > 0) {
-                print '<td><a href="'.$CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session='.$date->sessionid.'&amp;userid='.$date->userid.'">'.format_string($grade->grade).'</a></td>';
+                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.format_string($grade->grade).'</a></td>';
             } else {
-                print '<td><a href="'.$CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session='.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('didntattend','block_facetoface').'</a></td>';
+                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('didntattend','block_facetoface').'</a></td>';
             }
         }
 
         if ($includestatus) {
             if ($date->status == 0) {
-                print '<td><a href="'.$CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session='.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('enrolled','block_facetoface').'</a></td>';
+                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('enrolled','block_facetoface').'</a></td>';
             } else {
-                print '<td><a href="'.$CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session='.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('cancelled','block_facetoface').'</a></td>';
+                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('cancelled','block_facetoface').'</a></td>';
             }
         }
         print '</tr>';
