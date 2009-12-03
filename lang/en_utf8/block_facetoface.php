@@ -24,6 +24,7 @@ $string['fixdates'] = 'Fix session dates';
 $string['futurebookings'] = 'Future bookings';
 $string['formaltitle'] = 'Face-to-face';
 $string['listsessiondates'] = 'List Face-to-face Session Dates';
+$string['mybookings'] = 'My bookings';
 $string['nbbookings'] = 'Bookings';
 $string['nobookinghistory'] = 'No booking history';
 $string['nobookinghistoryfor'] = 'No booking history for $a';

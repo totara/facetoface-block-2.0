@@ -157,16 +157,13 @@ print_box_start();
 $currenttab = 'attendees';
 include_once('tabs.php');
 
-// Date range form
-print '<h2>'.get_string('filters', 'block_facetoface').'</h2>';
-print '<form method="get" action=""><p>';
-print '<label for="menustartdate">'.get_string('daterange', 'block_facetoface').'</label>';
-print_date_selector('startday', 'startmonth', 'startyear', $startdate);
-print ' to ';
-print_date_selector('endday', 'endmonth', 'endyear', $enddate);
-print '<br />';
-print_facetoface_filters($coursename, $courseid, $location, $trainer);
-print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'" /></p></form>';
+if (empty($users)) {
+    // Date range form
+    print '<h2>'.get_string('filters', 'block_facetoface').'</h2>';
+    print '<form method="get" action=""><p>';
+    print_facetoface_filters($startdate, $enddate, $coursename, $courseid, $location, $trainer);
+    print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'" /></p></form>';
+}
 
 // Show all session dates
 if ($nbdates > 0) {
