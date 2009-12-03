@@ -8,6 +8,7 @@ $string['allsessions'] = 'All sessions';
 $string['allfuturesessions'] = 'All future sessions';
 $string['apply'] = 'Apply';
 $string['attended'] = 'attended';
+$string['bookings'] = 'Bookings';
 $string['bookinghistory'] = 'Booking history';
 $string['bookinghistoryfor'] = 'Booking history for $a';
 $string['cancelled'] = 'cancelled';

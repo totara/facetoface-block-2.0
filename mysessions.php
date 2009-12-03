@@ -100,7 +100,7 @@ if ('export' == $action) {
 // i.e. multiple days startdate = firstday, finishdate = last day
 $groupeddates = group_session_dates($dates);
 
-$pagetitle = format_string(get_string('listsessiondates', 'block_facetoface'));
+$pagetitle = format_string(get_string('facetoface', 'facetoface') . ' ' . get_string('sessions', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
 print_header_simple($pagetitle, '', $navigation);

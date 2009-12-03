@@ -75,7 +75,7 @@ if ($pastsessions and count($pastsessions) > 0) {
     $nbpast = count($pastsessions);
 }
 
-$pagetitle = format_string(get_string('listsessiondates', 'block_facetoface'));
+$pagetitle = format_string(get_string('facetoface', 'facetoface') . ' ' . get_string('bookings', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
 print_header_simple($pagetitle, '', $navigation);
