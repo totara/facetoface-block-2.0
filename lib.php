@@ -359,3 +359,107 @@ function add_location_info(&$sessions)
         }
     }
 }
+
+/**
+ * Prints form items with the names $day, $month and $year
+ *
+ * @param int $filtername - the name of the filter to set up i.e coursename, courseid, location, trainer
+ * @param int $currentvalue
+ * @param boolean $return
+ */
+function print_facetoface_filters($currentcoursename='', $currentcourseid='',$currentlocation='', $currenttrainer='', $return=false)
+{
+    global $CFG;
+
+    $coursenames = array();
+    $sessions = array();
+    $locations = array();
+    $courseids = array();
+    $trainers = array();
+
+    $results = get_records_sql("SELECT c.id as courseid, c.idnumber, c.fullname, s.id AS sessionid
+                                    FROM {$CFG->prefix}course c
+                                    JOIN {$CFG->prefix}facetoface f ON f.course = c.id
+                                    JOIN {$CFG->prefix}facetoface_sessions s ON f.id = s.facetoface
+                                    WHERE c.visible = 1
+                                    GROUP BY c.id, c.idnumber, c.fullname, s.id
+                                    ORDER BY c.fullname ASC");
+    add_trainer_info($results);
+    add_location_info($results);
+
+    foreach ($results as $result) {
+
+        // create unique list of coursenames
+        if (!array_key_exists($result->fullname, $coursenames)) {
+            $coursenames[$result->fullname] = $result->fullname;
+        }
+
+        // created unique list of locations
+        if (isset($result->location)) {
+            if (!array_key_exists($result->location, $locations)) {
+                $locations[$result->location] = $result->location;
+            }
+        }
+
+        // create unique list of courseids
+        if (!array_key_exists($result->idnumber, $courseids) and $result->idnumber) {
+            $courseids[$result->idnumber] = $result->idnumber;
+        }
+
+        // create unique list of trainers
+        if (isset($result->trainers)) {
+            foreach ($result->trainers as $trainer) {
+                if (!array_key_exists($trainer,$trainers)) {
+                    $trainers[$trainer] = $trainer;
+                }
+            }
+        }
+    }
+
+    // Build or print result
+    $result='';
+    $result.='<label for="menucoursename">'.get_string('coursefullname','block_facetoface').': </label>';
+    $result.=choose_from_menu($coursenames, 'coursename', $currentcoursename, get_string('all'), '', '', true);
+    $result.='<label for="menucourseid">'.get_string('idnumbercourse').': </label>';
+    $result.=choose_from_menu($courseids, 'courseid', $currentcourseid, get_string('all'), '', '', true);
+    $result.='<label for="menutrainer">'.get_string('trainer', 'block_facetoface').': </label>';
+    $result.=choose_from_menu($trainers, 'trainer', $currenttrainer, get_string('all'), '', '', true);
+    $result.='<label for="menulocation">'.get_string('location', 'facetoface').': </label>';
+    $result.=choose_from_menu($locations, 'location', $currentlocation, get_string('all'), '', '', true);
+
+    if ($return) {
+        return $result;
+    } else {
+        echo $result;
+    }
+}
+
+/**
+ * Add the trainer info
+ */
+function add_trainer_info(&$sessions)
+{
+    global $CFG;
+
+    $trainers = array();
+    foreach ($sessions as $session) {
+        if ($cm = get_coursemodules_in_course('facetoface',$session->courseid)) {
+            foreach ($cm as $module) {
+                $context = get_context_instance(CONTEXT_MODULE, $module->id);
+                if ($users = get_users_by_capability($context, 'mod/facetoface:viewattendees', 'u.id, u.firstname, u.lastname', '', '', '', '', '', false)) {
+                    foreach ($users as $user) {
+                        $fullname = $user->firstname . ' ' . $user->lastname;
+                        if (!array_key_exists($fullname, $trainers)) {
+                            $trainers[$fullname] = $fullname;
+                        }
+                    }
+                    if (!empty($trainers)) {
+                        $session->trainers = $trainers;
+                    } else {
+                        $session->trainers = '';
+                    }
+                }
+            }
+        }
+    }
+}

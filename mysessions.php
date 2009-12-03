@@ -24,11 +24,21 @@ $format = optional_param('format',       'ods', PARAM_ALPHA); // one of: ods, xl
 
 $search = optional_param('search', '', PARAM_TEXT); // search string
 
+// filter options
+$coursename   = optional_param('coursename', '', PARAM_TEXT);
+$courseid     = optional_param('courseid',   '', PARAM_TEXT);
+$trainer      = optional_param('trainer',    '', PARAM_TEXT);
+$location     = optional_param('location',   '', PARAM_TEXT);
+
 $startdate = make_timestamp($startyear, $startmonth, $startday);
 $enddate = make_timestamp($endyear, $endmonth, $endday);
 
 $urlparams = "startyear=$startyear&amp;startmonth=$startmonth&amp;startday=$startday&amp;";
 $urlparams .= "endyear=$endyear&amp;endmonth=$endmonth&amp;endday=$endday";
+
+$coursenamesql = $coursename ? " AND c.fullname = '$coursename'" : '';
+$courseidsql = $courseid ? " AND c.idnumber = '$courseid'" : '';
+
 $sortbylink = "mysessions.php?{$urlparams}&amp;sortby=";
 
 $records = '';
@@ -56,9 +66,12 @@ if ($search) {
 
                                  WHERE d.timestart >= $startdate AND d.timefinish <= $enddate
                                        AND m.name = 'facetoface'
+                                    $coursenamesql
+                                    $courseidsql
                               ORDER BY $sortby");
 
     add_location_info($records);
+    add_trainer_info($records);
 }
 
 // Only keep the sessions for which this user can see attendees
@@ -69,21 +82,66 @@ if ($records) {
     // Check the system context first
     $contextsystem = get_context_instance(CONTEXT_SYSTEM);
     if (has_capability($capability, $contextsystem)) {
-        $dates = $records;
-    }
-    else {
-        foreach($records as $record) {
-            // Check at course level first
-            $contextcourse = get_context_instance(CONTEXT_COURSE, $record->courseid);
-            if (has_capability($capability, $contextcourse)) {
-                $dates[] = $record;
-                continue;
-            }
 
-            // Check at module level if the first check failed
-            $contextmodule = get_context_instance(CONTEXT_MODULE, $record->cmid);
-            if (has_capability($capability, $contextmodule)) {
-                $dates[] = $record;
+        // check if the location or trainer filters need to be used
+        if ($location or $trainer) {
+            foreach ($records as $record) {
+
+                if ($record->location === $location) {
+                    $dates[] = $record;
+                }
+
+                if (isset($record->trainers)) {
+                    foreach ($record->trainers as $t) {
+                        if ($t === $trainer) {
+                            $dates[] = $record;
+                            continue;
+                        }
+                    }
+                }
+            }
+        } else {
+            $dates = $records;
+        }
+
+    } else {
+        foreach($records as $record) {
+            if ($location or $trainer) {
+
+                // Check at course level first
+                $contextcourse = get_context_instance(CONTEXT_COURSE, $record->courseid);
+                if (has_capability($capability, $contextcourse)) {
+                    if ($record->location === $location) {
+                        $dates[] = $record;
+                    }
+
+                    if (isset($record->trainers)) {
+                        foreach($record->trainers as $t) {
+                            if ($t === $trainer) {
+                                $dates[] = $record;
+                                continue;
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                // Check at module level if the first check failed
+                $contextmodule = get_context_instance(CONTEXT_MODULE, $record->cmid);
+                if (has_capability($capability, $contextmodule)) {
+                    if ($record->location === $location) {
+                        $dates[] = $record;
+                    }
+
+                    if (isset($record->trainers)) {
+                        foreach($record->trainers as $t) {
+                            if ($t === $trainer) {
+                                $dates[] = $record;
+                                continue;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -112,11 +170,14 @@ include_once('tabs.php');
 
 if (empty($users)) {
     // Date range form
-    print '<h2>'.get_string('daterange', 'block_facetoface').'</h2>';
+    print '<h2>'.get_string('filters', 'block_facetoface').'</h2>';
     print '<form method="get" action=""><p>';
+    print '<label for="menustartdate">'.get_string('daterange', 'block_facetoface').'</label>';
     print_date_selector('startday', 'startmonth', 'startyear', $startdate);
     print ' to ';
     print_date_selector('endday', 'endmonth', 'endyear', $enddate);
+    print '<br />';
+    print_facetoface_filters($coursename, $courseid, $location, $trainer);
     print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'" /></p></form>';
 }
 
