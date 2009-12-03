@@ -23,7 +23,7 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
 
     // include the course id in the display
     if ($includetrainers) {
-        print '<th><a href="'.$sortbylink.'trainers">'.get_string('trainer','block_facetoface').'</a></th>';
+        print '<th>'.get_string('trainer','block_facetoface').'</th>';
     }
 
     print '<th><a href="'.$sortbylink.'name">'.get_string('name').'</a></th>';
