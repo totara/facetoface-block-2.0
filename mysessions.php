@@ -21,8 +21,6 @@ $endday     = optional_param('endday',     strftime('%d', $timelater), PARAM_INT
 $action = optional_param('action',          '', PARAM_ALPHA); // one of: '', export
 $format = optional_param('format',       'ods', PARAM_ALPHA); // one of: ods, xls
 
-$search = optional_param('search', '', PARAM_TEXT); // search string
-
 // filter options
 $coursename   = optional_param('coursename', '', PARAM_TEXT);
 $courseid     = optional_param('courseid',   '', PARAM_TEXT);
@@ -39,36 +37,31 @@ $coursenamesql = $coursename ? " AND c.fullname = '$coursename'" : '';
 $courseidsql = $courseid ? " AND c.idnumber = '$courseid'" : '';
 
 $records = '';
-$users = '';
 
-if ($search) {
-    $users = get_users_search($search);
-} else {
-    // Get all Face-to-face session dates from the DB
-    $records = get_records_sql("SELECT d.id, cm.id AS cmid, c.id AS courseid, c.fullname AS coursename,
-                                       c.idnumber as cidnumber, f.name, f.id as facetofaceid, s.id as sessionid,
-                                       d.timestart, d.timefinish, su.nbbookings
-                                  FROM {$CFG->prefix}facetoface_sessions_dates d
-                                  JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
-                                  JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
-                       LEFT OUTER JOIN (SELECT sessionid, count(sessionid) AS nbbookings
-                                          FROM {$CFG->prefix}facetoface_submissions su
-                                         WHERE su.timecancelled = 0
-                                      GROUP BY sessionid) su ON su.sessionid = d.sessionid
-                                  JOIN {$CFG->prefix}course c ON f.course = c.id
+// Get all Face-to-face session dates from the DB
+$records = get_records_sql("SELECT d.id, cm.id AS cmid, c.id AS courseid, c.fullname AS coursename,
+                                   c.idnumber as cidnumber, f.name, f.id as facetofaceid, s.id as sessionid,
+                                   d.timestart, d.timefinish, su.nbbookings
+                              FROM {$CFG->prefix}facetoface_sessions_dates d
+                              JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
+                              JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
+                   LEFT OUTER JOIN (SELECT sessionid, count(sessionid) AS nbbookings
+                                      FROM {$CFG->prefix}facetoface_submissions su
+                                     WHERE su.timecancelled = 0
+                                  GROUP BY sessionid) su ON su.sessionid = d.sessionid
+                              JOIN {$CFG->prefix}course c ON f.course = c.id
 
-                                  JOIN {$CFG->prefix}course_modules cm ON cm.course = f.course
-                                       AND cm.instance = f.id
-                                  JOIN {$CFG->prefix}modules m ON m.id = cm.module
+                              JOIN {$CFG->prefix}course_modules cm ON cm.course = f.course
+                                   AND cm.instance = f.id
+                              JOIN {$CFG->prefix}modules m ON m.id = cm.module
 
-                                 WHERE d.timestart >= $startdate AND d.timefinish <= $enddate
-                                       AND m.name = 'facetoface'
-                                    $coursenamesql
-                                    $courseidsql");
+                             WHERE d.timestart >= $startdate AND d.timefinish <= $enddate
+                                   AND m.name = 'facetoface'
+                                $coursenamesql
+                                $courseidsql");
 
-    add_location_info($records);
-    add_trainer_info($records);
-}
+add_location_info($records);
+add_trainer_info($records);
 
 // Only keep the sessions for which this user can see attendees
 $dates = array();
@@ -164,18 +157,16 @@ print_box_start();
 $currenttab = 'attendees';
 include_once('tabs.php');
 
-if (empty($users)) {
-    // Date range form
-    print '<h2>'.get_string('filters', 'block_facetoface').'</h2>';
-    print '<form method="get" action=""><p>';
-    print '<label for="menustartdate">'.get_string('daterange', 'block_facetoface').'</label>';
-    print_date_selector('startday', 'startmonth', 'startyear', $startdate);
-    print ' to ';
-    print_date_selector('endday', 'endmonth', 'endyear', $enddate);
-    print '<br />';
-    print_facetoface_filters($coursename, $courseid, $location, $trainer);
-    print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'" /></p></form>';
-}
+// Date range form
+print '<h2>'.get_string('filters', 'block_facetoface').'</h2>';
+print '<form method="get" action=""><p>';
+print '<label for="menustartdate">'.get_string('daterange', 'block_facetoface').'</label>';
+print_date_selector('startday', 'startmonth', 'startyear', $startdate);
+print ' to ';
+print_date_selector('endday', 'endmonth', 'endyear', $enddate);
+print '<br />';
+print_facetoface_filters($coursename, $courseid, $location, $trainer);
+print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'" /></p></form>';
 
 // Show all session dates
 if ($nbdates > 0) {
@@ -200,31 +191,10 @@ if ($nbdates > 0) {
     print '</select>';
 
     print ' <input type="submit" value="'.get_string('exporttofile', 'facetoface').'" /></p></form>';
-} else if ($users) {
-    if (count($users) > 0) {
-        print '<h3>'.get_string('searchedusers','block_facetoface', count($users)).'</h3>';
-        foreach ($users as $u) {
-            print '<a href="'.$CFG->wwwroot.'/blocks/facetoface/mysignups.php?'.$urlparams.'&amp;userid='.$u->id.'">'.fullname($u).'</a><br />';
-        }
-    }
 } else {
     print '<h2>'.get_string('sessiondatesview', 'block_facetoface').'</h2>';
     print '<p>'.get_string('sessiondatesviewattendeeszero', 'block_facetoface').'</p>';
 }
-
-echo '<div class="usersearch">';
-    print '<h3>'.get_string('searchusers', 'block_facetoface').'</h3>';
-    echo '<form class="learnersearch" id="searchquery" method="post" action="'.$CFG->wwwroot.'/blocks/facetoface/mysessions.php">';
-    print '<input type="hidden" name="startyear" value="'.$startyear.'" />';
-    print '<input type="hidden" name="startmonth" value="'.$startmonth.'" />';
-    print '<input type="hidden" name="startday" value="'.$startday.'" />';
-    print '<input type="hidden" name="endyear" value="'.$endyear.'" />';
-    print '<input type="hidden" name="endmonth" value="'.$endmonth.'" />';
-    print '<input type="hidden" name="endday" value="'.$endday.'" />';
-    echo '<input class="searchform" type="text" name="search" size="35" maxlength="255" value="'.$search.'"/>';
-    echo '<input type="submit" value="Search" />';
-echo '</form>';
-echo '</div>';
 
 print_box_end();
 print_footer();
