@@ -1,4 +1,5 @@
 <?php
+$string['error:invaliduserid'] = 'Invalid user ID';
 
 $string['allsessions'] = 'All sessions';
 $string['allfuturesessions'] = 'All future sessions';
@@ -37,5 +38,3 @@ $string['trainer'] = 'Trainer(s)';
 $string['upcomingsessions'] = 'Upcoming sessions';
 $string['viewexportsessions'] = 'View/export sessions';
 $string['xrecords'] = '$a records';
-
-?>
