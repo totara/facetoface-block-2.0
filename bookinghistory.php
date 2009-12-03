@@ -9,32 +9,27 @@ require_once('lib.php');
 require_login();
 
 $sid        = required_param('session', PARAM_INT);
-$userid     = optional_param('userid', PARAM_INT);
+$userid     = optional_param('userid', $USER->id, PARAM_INT);
 
-    // get all the required records
-    if (!isset($userid)) {
-        $userid = $USER->id;
-    }
-
-    if (! $user = get_record('user','id',$userid)) {
-        error('Invalid user id');
-    }
-    if (! $session = facetoface_get_session($sid)) {
-        error('Invalid session id');
-    }
-
-    if(! $facetoface = get_record('facetoface','id', $session->facetoface)) {
-        error('Invalid facetoface id');
-    }
-
-    if (! $course = get_record('course','id',$facetoface->course)) {
-        error('Invalid course id');
-    }
+// get all the required records
+if (!$user = get_record('user','id',$userid)) {
+    print_error('error:invaliduserid', 'block_facetoface');
+}
+if (!$session = facetoface_get_session($sid)) {
+    print_error('error:invalidsessionid', 'block_facetoface');
+}
+if(!$facetoface = get_record('facetoface','id', $session->facetoface)) {
+    print_error('error:invalidfacetofaceid', 'block_facetoface');
+}
+if (!$course = get_record('course','id',$facetoface->course)) {
+    print_error('error:invalidcourseid', 'block_facetoface');
+}
 
 $pagetitle = format_string(get_string('bookinghistory', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
 print_header_simple($pagetitle, '', $navigation);
+print_box_start();
 
 // Get signups from the DB
 $bookings = get_records_sql("SELECT su.timecreated, su.timecancelled as status, su.grade, su.timegraded, su.cancelreason,
@@ -60,8 +55,13 @@ if ($user->id != $USER->id) {
     echo "<br />";
 }
 
+print_heading(get_string('sessiondetails', 'block_facetoface'));
+
 // print the session information
-facetoface_print_session($session, false);
+$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id);
+$contextmodule = get_context_instance(CONTEXT_MODULE, $cm->id);
+$viewattendees = has_capability('mod/facetoface:viewattendees', $contextmodule);
+facetoface_print_session($session, $viewattendees);
 
 // print the booking history
 if ($bookings and count($bookings) > 0) {
@@ -105,7 +105,9 @@ if ($bookings and count($bookings) > 0) {
        $table->data[] = array(get_string('nobookinghistory','block_facetoface'));
     }
 }
+
+print_heading(get_string('bookinghistory', 'block_facetoface'));
 print_table($table);
 
+print_box_end();
 print_footer();
-?>

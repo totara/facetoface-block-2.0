@@ -1,9 +1,14 @@
 <?php
+$string['error:invalidcourseid'] = 'Invalid course ID';
+$string['error:invalidfacetofaceid'] = 'Invalid Face-to-face activity ID';
+$string['error:invalidsessionid'] = 'Invalid session ID';
+$string['error:invaliduserid'] = 'Invalid user ID';
 
 $string['allsessions'] = 'All sessions';
 $string['allfuturesessions'] = 'All future sessions';
 $string['apply'] = 'Apply';
 $string['attended'] = 'attended';
+$string['bookings'] = 'Bookings';
 $string['bookinghistory'] = 'Booking history';
 $string['bookinghistoryfor'] = 'Booking history for $a';
 $string['cancelled'] = 'cancelled';
@@ -30,6 +35,7 @@ $string['sessiondatesviewattendees'] = 'You can view attendees in the following 
 $string['sessiondatesview'] = 'You are involved in the following sessions';
 $string['sessiondatesviewattendeeszero'] = 'You cannot view the attendees of any session in the given date range.';
 $string['sessiondatestable'] = 'List of session details along with number of bookings';
+$string['sessiondetails'] = 'Session details';
 $string['sessionlist'] = 'Session list';
 $string['signedupin'] = 'You are signed-up in the following sessions:';
 $string['signedupinzero'] = 'No sign-ups could be found in the given date range.';
@@ -40,5 +46,3 @@ $string['trainers'] = 'Trainer(s)';
 $string['upcomingsessions'] = 'Upcoming sessions';
 $string['viewexportsessions'] = 'View/export sessions';
 $string['xrecords'] = '$a records';
-
-?>
