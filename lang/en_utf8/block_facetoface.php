@@ -1,4 +1,7 @@
 <?php
+$string['error:invalidcourseid'] = 'Invalid course ID';
+$string['error:invalidfacetofaceid'] = 'Invalid Face-to-face activity ID';
+$string['error:invalidsessionid'] = 'Invalid session ID';
 $string['error:invaliduserid'] = 'Invalid user ID';
 
 $string['allsessions'] = 'All sessions';
