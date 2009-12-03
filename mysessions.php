@@ -18,7 +18,6 @@ $endyear    = optional_param('endyear',    strftime('%Y', $timelater), PARAM_INT
 $endmonth   = optional_param('endmonth',   strftime('%m', $timelater), PARAM_INT);
 $endday     = optional_param('endday',     strftime('%d', $timelater), PARAM_INT);
 
-$sortby = optional_param('sortby', 'timestart', PARAM_ALPHA); // column to sort by
 $action = optional_param('action',          '', PARAM_ALPHA); // one of: '', export
 $format = optional_param('format',       'ods', PARAM_ALPHA); // one of: ods, xls
 
@@ -38,8 +37,6 @@ $urlparams .= "endyear=$endyear&amp;endmonth=$endmonth&amp;endday=$endday";
 
 $coursenamesql = $coursename ? " AND c.fullname = '$coursename'" : '';
 $courseidsql = $courseid ? " AND c.idnumber = '$courseid'" : '';
-
-$sortbylink = "mysessions.php?{$urlparams}&amp;sortby=";
 
 $records = '';
 $users = '';
@@ -67,8 +64,7 @@ if ($search) {
                                  WHERE d.timestart >= $startdate AND d.timefinish <= $enddate
                                        AND m.name = 'facetoface'
                                     $coursenamesql
-                                    $courseidsql
-                              ORDER BY $sortby");
+                                    $courseidsql");
 
     add_location_info($records);
     add_trainer_info($records);
@@ -195,7 +191,6 @@ if ($nbdates > 0) {
     print '<input type="hidden" name="endyear" value="'.$endyear.'" />';
     print '<input type="hidden" name="endmonth" value="'.$endmonth.'" />';
     print '<input type="hidden" name="endday" value="'.$endday.'" />';
-    print '<input type="hidden" name="sortby" value="'.$sortby.'" />';
     print '<input type="hidden" name="action" value="export" />';
 
     print get_string('format', 'facetoface').':&nbsp;';
@@ -226,7 +221,6 @@ echo '<div class="usersearch">';
     print '<input type="hidden" name="endyear" value="'.$endyear.'" />';
     print '<input type="hidden" name="endmonth" value="'.$endmonth.'" />';
     print '<input type="hidden" name="endday" value="'.$endday.'" />';
-    print '<input type="hidden" name="sortby" value="'.$sortby.'" />';
     echo '<input class="searchform" type="text" name="search" size="35" maxlength="255" value="'.$search.'"/>';
     echo '<input type="submit" value="Search" />';
 echo '</form>';

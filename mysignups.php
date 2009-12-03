@@ -18,7 +18,6 @@ $endyear    = optional_param('endyear',    strftime('%Y', $timelater), PARAM_INT
 $endmonth   = optional_param('endmonth',   strftime('%m', $timelater), PARAM_INT);
 $endday     = optional_param('endday',     strftime('%d', $timelater), PARAM_INT);
 
-$sortby = optional_param('sortby', 'timestart', PARAM_ALPHA); // column to sort by
 $action = optional_param('action',          '', PARAM_ALPHA); // one of: '', export
 $format = optional_param('format',       'ods', PARAM_ALPHA); // one of: ods, xls
 
@@ -32,7 +31,6 @@ $enddate = make_timestamp($endyear, $endmonth, $endday);
 
 $urlparams = "startyear=$startyear&amp;startmonth=$startmonth&amp;startday=$startday&amp;";
 $urlparams .= "endyear=$endyear&amp;endmonth=$endmonth&amp;endday=$endday&amp;userid=$userid";
-$sortbylink = "mysignups.php?{$urlparams}&amp;sortby=";
 
 // Process actions if any
 if ('export' == $action) {
@@ -50,8 +48,7 @@ $signups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursen
                               JOIN {$CFG->prefix}facetoface_submissions su ON su.sessionid = s.id
                               JOIN {$CFG->prefix}course c ON f.course = c.id
                              WHERE d.timestart >= $startdate AND d.timefinish <= $enddate AND
-                                   su.userid = $user->id
-                          ORDER BY $sortby");
+                                   su.userid = $user->id");
 add_location_info($signups);
 
 // format the session and dates to only show one booking where they span multiple dates

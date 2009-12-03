@@ -6,7 +6,7 @@ require_once('../../mod/facetoface/lib.php');
  * Print the session dates in a nicely formatted table.
  */
 function print_dates($dates, $includebookings, $includegrades=false, $includestatus=false, $includecourseid=false, $includetrainers=false) {
-    global $sortbylink, $CFG, $USER;
+    global $CFG, $USER;
 
     $courselink = $CFG->wwwroot.'/course/view.php?id=';
     $facetofacelink = $CFG->wwwroot.'/mod/facetoface/view.php?f=';
@@ -16,32 +16,32 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
 
     // include the course id in the display
     if ($includecourseid) {
-        print '<th><a href="'.$sortbylink.'courseid">'.get_string('idnumbercourse').'</a></th>';
+        print '<th>'.get_string('idnumbercourse').'</th>';
     }
 
-    print '<th><a href="'.$sortbylink.'coursename">'.get_string('course').'</a></th>';
+    print '<th>'.get_string('course').'</th>';
 
     // include the course id in the display
     if ($includetrainers) {
         print '<th>'.get_string('trainer','block_facetoface').'</th>';
     }
 
-    print '<th><a href="'.$sortbylink.'name">'.get_string('name').'</a></th>';
+    print '<th>'.get_string('name').'</th>';
     print '<th>'.get_string('location').'</th>';
-    print '<th><a href="'.$sortbylink.'timestart">'.get_string('date','block_facetoface').'</a></th>';
+    print '<th>'.get_string('date','block_facetoface').'</th>';
     print '<th>'.get_string('time', 'block_facetoface').'</th>';
     if ($includebookings) {
-        print '<th><a href="'.$sortbylink.'nbbookings">'.get_string('nbbookings', 'block_facetoface').'</a></th>';
+        print '<th>'.get_string('nbbookings', 'block_facetoface').'</th>';
     }
     
     // include the grades in the display
     if ($includegrades) {
-        print '<th><a href="'.$sortbylink.'grade">'.get_string('grade').'</a></th>';
+        print '<th>'.get_string('grade').'</th>';
     }
 
     // include the status (enrolled,cancelled) in the display
     if ($includestatus) {
-        print '<th><a href="'.$sortbylink.'status">'.get_string('status').'</a></th>';
+        print '<th>'.get_string('status').'</th>';
     }
 
     print '</tr>';
