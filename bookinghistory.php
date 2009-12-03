@@ -29,6 +29,7 @@ $pagetitle = format_string(get_string('bookinghistory', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
 print_header_simple($pagetitle, '', $navigation);
+print_box_start();
 
 // Get signups from the DB
 $bookings = get_records_sql("SELECT su.timecreated, su.timecancelled as status, su.grade, su.timegraded, su.cancelreason,
@@ -101,5 +102,5 @@ if ($bookings and count($bookings) > 0) {
 }
 print_table($table);
 
+print_box_end();
 print_footer();
-?>
