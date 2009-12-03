@@ -91,6 +91,7 @@ $currenttab = 'attending';
 include_once('tabs.php');
 
 if (empty($users)) {
+
     // Date range form
     print '<h2>'.get_string('daterange', 'block_facetoface').'</h2>';
     print '<form method="get" action=""><p>';
@@ -101,7 +102,11 @@ if (empty($users)) {
     print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'" /></p></form>';
 
     // Show sign-ups
-    print '<h2>'.get_string('futurebookings', 'block_facetoface').'</h2>';
+    if ($userid != $USER->id) {
+        print '<h2>'.get_string('futurebookingsfor', 'block_facetoface', fullname($user)).'</h2>';
+    } else {
+        print '<h2>'.get_string('futurebookings', 'block_facetoface').'</h2>';
+    }
     if ($nbfuture > 0) {
         print_dates($futuresessions, false, false, true);
     }
@@ -110,7 +115,11 @@ if (empty($users)) {
     }
 
     // Show past bookings
-    print '<h2>'.get_string('pastbookings', 'block_facetoface').'</h2>';
+    if ($userid != $USER->id) {
+        print '<h2>'.get_string('pastbookingsfor', 'block_facetoface', fullname($user)).'</h2>';
+    } else {
+        print '<h2>'.get_string('pastbookings', 'block_facetoface').'</h2>';
+    }
     if ($nbpast > 0) {
         print_dates($pastsessions, false, true);
     }
