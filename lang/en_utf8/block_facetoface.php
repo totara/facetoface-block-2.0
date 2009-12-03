@@ -13,6 +13,7 @@ $string['daterange'] = 'Date range:';
 $string['didntattend'] = 'didn\'t attend';
 $string['exportsessiondates'] = 'Export session dates';
 $string['enrolled'] = 'enrolled';
+$string['filters'] = 'Filters';
 $string['finishdate'] = 'Finish date';
 $string['fixdates'] = 'Fix session dates';
 $string['futurebookings'] = 'Future bookings';
