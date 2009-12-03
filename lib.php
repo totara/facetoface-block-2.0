@@ -27,7 +27,7 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     }
 
     print '<th><a href="'.$sortbylink.'name">'.get_string('name').'</a></th>';
-    print '<th><a href="'.$sortbylink.'location">'.get_string('location').'</a></th>';
+    print '<th>'.get_string('location').'</th>';
     print '<th><a href="'.$sortbylink.'timestart">'.get_string('date','block_facetoface').'</a></th>';
     print '<th>'.get_string('time', 'block_facetoface').'</th>';
     if ($includebookings) {

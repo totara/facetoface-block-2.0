@@ -33,6 +33,7 @@ $string['sessiondatesviewattendees'] = 'You can view attendees in the following 
 $string['sessiondatesview'] = 'You are involved in the following sessions';
 $string['sessiondatesviewattendeeszero'] = 'You cannot view the attendees of any session in the given date range.';
 $string['sessiondatestable'] = 'List of session details along with number of bookings';
+$string['sessiondetails'] = 'Session details';
 $string['sessionlist'] = 'Session list';
 $string['signedupin'] = 'You are signed-up in the following sessions:';
 $string['signedupinzero'] = 'No sign-ups could be found in the given date range.';

@@ -55,8 +55,13 @@ if ($user->id != $USER->id) {
     echo "<br />";
 }
 
+print_heading(get_string('sessiondetails', 'block_facetoface'));
+
 // print the session information
-facetoface_print_session($session, false);
+$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id);
+$contextmodule = get_context_instance(CONTEXT_MODULE, $cm->id);
+$viewattendees = has_capability('mod/facetoface:viewattendees', $contextmodule);
+facetoface_print_session($session, $viewattendees);
 
 // print the booking history
 if ($bookings and count($bookings) > 0) {
@@ -100,6 +105,8 @@ if ($bookings and count($bookings) > 0) {
        $table->data[] = array(get_string('nobookinghistory','block_facetoface'));
     }
 }
+
+print_heading(get_string('bookinghistory', 'block_facetoface'));
 print_table($table);
 
 print_box_end();
