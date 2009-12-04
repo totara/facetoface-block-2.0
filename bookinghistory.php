@@ -68,9 +68,7 @@ if ($bookings and count($bookings) > 0) {
 
     $table = new object();
     $table->summary = get_string('sessionsdetailstablesummary', 'facetoface');
-    $table->class = 'f2fsession';
     $table->width = '50%';
-    $table->align = array('right', 'left');
 
     foreach ($bookings as $booking) {
         if (isset($booking->status) and $booking->status == 0) {
@@ -95,7 +93,6 @@ if ($bookings and count($bookings) > 0) {
     // no booking history available
     $table = new object();
     $table->summary = get_string('sessionsdetailstablesummary', 'facetoface');
-    $table->class = 'f2fsession';
     $table->width = '50%';
     $table->align = array('center');
 
