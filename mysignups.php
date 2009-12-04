@@ -93,8 +93,8 @@ include_once('tabs.php');
 if (empty($users)) {
 
     // Date range form
-    print '<h2>'.get_string('daterange', 'block_facetoface').'</h2>';
     print '<form method="get" action=""><p>';
+    print get_string('daterange', 'block_facetoface') . ' ';
     print_date_selector('startday', 'startmonth', 'startyear', $startdate);
     print ' to ';
     print_date_selector('endday', 'endmonth', 'endyear', $enddate);
@@ -103,9 +103,9 @@ if (empty($users)) {
 
     // Show sign-ups
     if ($userid != $USER->id) {
-        print '<h2>'.get_string('futurebookingsfor', 'block_facetoface', fullname($user)).'</h2>';
+        print_heading(get_string('futurebookingsfor', 'block_facetoface', fullname($user)));
     } else {
-        print '<h2>'.get_string('futurebookings', 'block_facetoface').'</h2>';
+        print_heading(get_string('futurebookings', 'block_facetoface'));
     }
     if ($nbfuture > 0) {
         print_dates($futuresessions, false, false, true);
@@ -116,9 +116,9 @@ if (empty($users)) {
 
     // Show past bookings
     if ($userid != $USER->id) {
-        print '<h2>'.get_string('pastbookingsfor', 'block_facetoface', fullname($user)).'</h2>';
+        print_heading(get_string('pastbookingsfor', 'block_facetoface', fullname($user)));
     } else {
-        print '<h2>'.get_string('pastbookings', 'block_facetoface').'</h2>';
+        print_heading(get_string('pastbookings', 'block_facetoface'));
     }
     if ($nbpast > 0) {
         print_dates($pastsessions, false, true);
@@ -128,25 +128,27 @@ if (empty($users)) {
     }
 } else if ($users) {
     if (count($users) > 0) {
-        print '<h3>'.get_string('searchedusers','block_facetoface', count($users)).'</h3>';
+        print_heading(get_string('searchedusers','block_facetoface', count($users)));
         foreach ($users as $u) {
             print '<a href="'.$CFG->wwwroot.'/blocks/facetoface/mysignups.php?'.$urlparams.'&amp;userid='.$u->id.'">'.fullname($u).'</a><br />';
         }
     }
 }
 
+print_heading(get_string('searchusers', 'block_facetoface'));
+
+echo '<form class="learnersearch" id="searchquery" method="post" action="'.$CFG->wwwroot.'/blocks/facetoface/mysignups.php">';
 echo '<div class="usersearch">';
-    print '<h3>'.get_string('searchusers', 'block_facetoface').'</h3>';
-    echo '<form class="learnersearch" id="searchquery" method="post" action="'.$CFG->wwwroot.'/blocks/facetoface/mysignups.php">';
-    print '<input type="hidden" name="startyear" value="'.$startyear.'" />';
-    print '<input type="hidden" name="startmonth" value="'.$startmonth.'" />';
-    print '<input type="hidden" name="startday" value="'.$startday.'" />';
-    print '<input type="hidden" name="endyear" value="'.$endyear.'" />';
-    print '<input type="hidden" name="endmonth" value="'.$endmonth.'" />';
-    print '<input type="hidden" name="endday" value="'.$endday.'" />';
-    echo '<input class="searchform" type="text" name="search" size="35" maxlength="255" value="'.$search.'"/>';
-    echo '<input type="submit" value="Search" />';
-echo '</form>';
+print '<input type="hidden" name="startyear" value="'.$startyear.'" />';
+print '<input type="hidden" name="startmonth" value="'.$startmonth.'" />';
+print '<input type="hidden" name="startday" value="'.$startday.'" />';
+print '<input type="hidden" name="endyear" value="'.$endyear.'" />';
+print '<input type="hidden" name="endmonth" value="'.$endmonth.'" />';
+print '<input type="hidden" name="endday" value="'.$endday.'" />';
+echo '<input class="searchform" type="text" name="search" size="35" maxlength="255" value="'.$search.'"/>';
+echo '<input type="submit" value="Search" />';
 echo '</div>';
+echo '</form>';
+
 print_box_end();
 print_footer();
