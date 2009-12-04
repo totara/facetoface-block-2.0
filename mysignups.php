@@ -26,6 +26,11 @@ if (!$user = get_record('user', 'id', $userid)) {
     print_error('error:invaliduserid', 'block_facetoface', 'mysignups.php');
 }
 
+if ($userid != $USER->id) {
+    $contextuser = get_context_instance(CONTEXT_USER, $userid);
+    require_capability('block/facetoface:viewbookings', $contextuser);
+}
+
 $search = optional_param('search', '', PARAM_TEXT); // search string
 
 $startdate = make_timestamp($startyear, $startmonth, $startday);

@@ -3,7 +3,7 @@
 class block_facetoface extends block_base {
     function init() {
         $this->title = get_string('formaltitle', 'block_facetoface');
-        $this->version = 2008050600;
+        $this->version = 2009120400;
     }
 
     function get_content() {
