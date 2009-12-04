@@ -18,6 +18,7 @@ $string['daterange'] = 'Date range:';
 $string['didntattend'] = 'didn\'t attend';
 $string['exportsessiondates'] = 'Export session dates';
 $string['enrolled'] = 'enrolled';
+$string['facetoface:viewbookings'] = 'View users facetoface bookings';
 $string['filters'] = 'Filters';
 $string['finishdate'] = 'Finish date';
 $string['fixdates'] = 'Fix session dates';
