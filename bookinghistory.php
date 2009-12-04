@@ -1,7 +1,6 @@
 <?php
 
 // Displays booking history for the current user
-// ToDo: Add capability testing to limit non-admin user from seeing all booking histories
 
 require_once '../../config.php';
 require_once('lib.php');
@@ -23,6 +22,11 @@ if(!$facetoface = get_record('facetoface','id', $session->facetoface)) {
 }
 if (!$course = get_record('course','id',$facetoface->course)) {
     print_error('error:invalidcourseid', 'block_facetoface');
+}
+
+if ($userid != $USER->id) {
+    $contextcourse = get_context_instance(CONTEXT_COURSE, $course->id);
+    require_capability('mod/facetoface:viewattendees',$contextcourse);
 }
 
 $pagetitle = format_string(get_string('bookinghistory', 'block_facetoface'));
