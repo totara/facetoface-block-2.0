@@ -32,5 +32,3 @@ class block_facetoface extends block_base {
         return $this->content;
     }
 }
-
-?>

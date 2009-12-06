@@ -21,4 +21,3 @@ $activated[] = $currenttab;
 
 /// Print out the tabs and continue!
 print_tabs($tabs, $currenttab, $inactive, $activated);
-?>

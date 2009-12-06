@@ -44,5 +44,3 @@ $block_facetoface_capabilities = array(
     )
 
 );
-
-?>
