@@ -25,8 +25,11 @@ if (!$course = get_record('course','id',$facetoface->course)) {
 }
 
 if ($userid != $USER->id) {
-    $contextcourse = get_context_instance(CONTEXT_COURSE, $course->id);
-    require_capability('mod/facetoface:viewattendees',$contextcourse);
+    $contextuser = get_context_instance(CONTEXT_USER, $userid);
+    if (!has_capability('block/facetoface:viewbookings', $contextuser)) {
+        $contextcourse = get_context_instance(CONTEXT_COURSE, $course->id);
+        require_capability('mod/facetoface:viewattendees', $contextcourse);
+    }
 }
 
 $pagetitle = format_string(get_string('bookinghistory', 'block_facetoface'));
