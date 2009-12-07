@@ -419,6 +419,7 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
 
     // Build or print result
     $table = new object();
+    $table->tablealign = 'left';
     $table->data[] = array('<label for="menustartdate">'.get_string('daterange', 'block_facetoface').'</label>',
                            print_date_selector('startday', 'startmonth', 'startyear', $startdate, true) . ' to ' .
                            print_date_selector('endday', 'endmonth', 'endyear', $enddate, true));

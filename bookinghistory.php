@@ -59,7 +59,7 @@ if ($user->id != $USER->id) {
     echo "<br />";
 }
 
-print_heading(get_string('sessiondetails', 'block_facetoface'));
+print_heading(get_string('sessiondetails', 'block_facetoface'), 'center');
 
 // print the session information
 $cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id);
@@ -107,7 +107,7 @@ if ($bookings and count($bookings) > 0) {
     }
 }
 
-print_heading(get_string('bookinghistory', 'block_facetoface'));
+print_heading(get_string('bookinghistory', 'block_facetoface'), 'center');
 print_table($table);
 
 print_box_end();
