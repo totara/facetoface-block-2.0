@@ -378,12 +378,12 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
     $courseids = array();
     $trainers = array();
 
-    $results = get_records_sql("SELECT c.id as courseid, c.idnumber, c.fullname, s.id AS sessionid
+    $results = get_records_sql("SELECT c.id as courseid, c.idnumber, c.fullname, s.id AS sessionid, f.id AS facetofaceid
                                     FROM {$CFG->prefix}course c
                                     JOIN {$CFG->prefix}facetoface f ON f.course = c.id
                                     JOIN {$CFG->prefix}facetoface_sessions s ON f.id = s.facetoface
                                     WHERE c.visible = 1
-                                    GROUP BY c.id, c.idnumber, c.fullname, s.id
+                                    GROUP BY c.id, c.idnumber, c.fullname, s.id, f.id
                                     ORDER BY c.fullname ASC");
     add_trainer_info($results);
     add_location_info($results);
@@ -441,11 +441,15 @@ function add_trainer_info(&$sessions)
 {
     global $CFG;
 
+    $module = get_record('modules', 'name','facetoface');
+    $trainerlists = array();
     $trainers = array();
     foreach ($sessions as $session) {
-        if ($cm = get_coursemodules_in_course('facetoface',$session->courseid)) {
-            foreach ($cm as $module) {
-                $context = get_context_instance(CONTEXT_MODULE, $module->id);
+        if ($cm = get_record('course_modules', 'instance', $session->facetofaceid, 'module', $module->id)) {
+
+            // check if the module instance has already had trainer info added
+            if (!array_key_exists($cm->id, $trainerlists)) {
+                $context = get_context_instance(CONTEXT_MODULE, $cm->id);
                 if ($users = get_users_by_capability($context, 'mod/facetoface:viewattendees', 'u.id, u.firstname, u.lastname', '', '', '', '', '', false)) {
                     foreach ($users as $user) {
                         $fullname = $user->firstname . ' ' . $user->lastname;
@@ -455,9 +459,17 @@ function add_trainer_info(&$sessions)
                     }
                     if (!empty($trainers)) {
                         $session->trainers = $trainers;
+                        $trainerlists[$cm->id] = $trainers;
                     } else {
                         $session->trainers = '';
+                        $trainerlists[$cm->id] = '';
                     }
+                }
+            } else {
+                if (!empty($trainerlists[$cm->id])) {
+                    $session->trainers = $trainerlists[$cm->id];
+                } else {
+                    $session->trainers = '';
                 }
             }
         }
