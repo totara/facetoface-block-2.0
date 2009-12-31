@@ -1,6 +1,7 @@
 <?php
 
 require_once('../../mod/facetoface/lib.php');
+define('TRAINER_CACHE_TIMEOUT',15); // in minutes
 
 /**
  * Print the session dates in a nicely formatted table.
@@ -56,13 +57,6 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
             $grade = facetoface_get_grade($date->userid, $date->courseid, $date->facetofaceid);
         }
 
-        // include the trainers in the display
-        if ($includetrainers) {
-            $cm = get_coursemodule_from_instance('facetoface', $date->facetofaceid, $date->courseid);
-            $context = get_context_instance(CONTEXT_MODULE, $cm->id);
-            $trainers = get_users_by_capability($context, 'mod/facetoface:viewattendees', 'u.id, u.firstname, u.lastname', '', '', '', '', '', false);
-        }
-
         if ($even) {
             print '<tr style="background-color: #CCCCCC" valign="top">';
         }
@@ -78,9 +72,9 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
         // include the trainer(s) in the display
         if ($includetrainers) {
             print '<td>';
-            if ($trainers and count($trainers) > 0) {
-                foreach ($trainers as $trainer) {
-                    print '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$trainer->id.'&amp;course='.$date->courseid.'">'.fullname($trainer).'</a><br />';
+            if ($date->trainers and count($date->trainers) > 0) {
+                foreach ($date->trainers as $trainer) {
+                    print $trainer.'<br />'; // FIXME: re-add the link to trainers profile page
                 }
             }
             print '</td>';
@@ -378,14 +372,34 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
     $courseids = array();
     $trainers = array();
 
-    $results = get_records_sql("SELECT c.id as courseid, c.idnumber, c.fullname, s.id AS sessionid, f.id AS facetofaceid
+    $results = get_records_sql("SELECT c.id as courseid, c.idnumber, c.fullname, s.id AS sessionid,
+                                       f.id AS facetofaceid, cm.id AS cmid
                                     FROM {$CFG->prefix}course c
                                     JOIN {$CFG->prefix}facetoface f ON f.course = c.id
                                     JOIN {$CFG->prefix}facetoface_sessions s ON f.id = s.facetoface
+                                    JOIN {$CFG->prefix}course_modules cm ON cm.course = f.course
+                                         AND cm.instance = f.id
                                     WHERE c.visible = 1
-                                    GROUP BY c.id, c.idnumber, c.fullname, s.id, f.id
+                                    GROUP BY c.id, c.idnumber, c.fullname, s.id, f.id, cm.id
                                     ORDER BY c.fullname ASC");
-    add_trainer_info($results);
+
+    // retrieve the cached trainerlist flag
+    if (!$flag = get_cache_flags('blocks/facetoface')) {
+        add_trainer_info($results);
+    } else {
+        if (empty($flag['trainers'])) {
+            add_trainer_info($results);
+        } else {
+            // unserialize the cached trainers list
+            $data   = unserialize($flag['trainers']);
+            foreach (array_values($data) as $trainerlist) {
+                foreach($trainerlist as $value) {
+                    $trainers[$value] = $value;
+                }
+            }
+        }
+    }
+
     add_location_info($results);
 
     foreach ($results as $result) {
@@ -408,10 +422,13 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
         }
 
         // create unique list of trainers
-        if (isset($result->trainers)) {
-            foreach ($result->trainers as $trainer) {
-                if (!array_key_exists($trainer,$trainers)) {
-                    $trainers[$trainer] = $trainer;
+        // check if $trainers hasn't already been populated by the cached list
+        if (empty($trainers)) {
+            if (isset($result->trainers)) {
+                foreach ($result->trainers as $trainer) {
+                    if (!array_key_exists($trainer,$trainers)) {
+                        $trainers[$trainer] = $trainer;
+                    }
                 }
             }
         }
@@ -441,37 +458,44 @@ function add_trainer_info(&$sessions)
 {
     global $CFG;
 
-    $module = get_record('modules', 'name','facetoface');
-    $trainerlists = array();
-    $trainers = array();
-    foreach ($sessions as $session) {
-        if ($cm = get_record('course_modules', 'instance', $session->facetofaceid, 'module', $module->id)) {
+    $moduleid = get_field('modules', 'id', 'name','facetoface');
+    $alltrainers = array(); // all possible trainers for filter dropdown
 
-            // check if the module instance has already had trainer info added
-            if (!array_key_exists($cm->id, $trainerlists)) {
-                $context = get_context_instance(CONTEXT_MODULE, $cm->id);
-                if ($users = get_users_by_capability($context, 'mod/facetoface:viewattendees', 'u.id, u.firstname, u.lastname', '', '', '', '', '', false)) {
-                    foreach ($users as $user) {
-                        $fullname = $user->firstname . ' ' . $user->lastname;
-                        if (!array_key_exists($fullname, $trainers)) {
-                            $trainers[$fullname] = $fullname;
-                        }
-                    }
-                    if (!empty($trainers)) {
-                        $session->trainers = $trainers;
-                        $trainerlists[$cm->id] = $trainers;
-                    } else {
-                        $session->trainers = '';
-                        $trainerlists[$cm->id] = '';
+    foreach ($sessions as $session) {
+
+        // individual session trainers
+        $sessiontrainers = array();
+
+        // check if the module instance has already had trainer info added
+        if (!array_key_exists($session->cmid, $alltrainers)) {
+            $context = get_context_instance(CONTEXT_MODULE, $session->cmid);
+            if ($users = get_users_by_capability($context, 'mod/facetoface:viewattendees', 'u.id, u.firstname, u.lastname', '', '', '', '', '', false)) {
+                foreach ($users as $user) {
+                    $fullname = fullname($user);
+                    if (!array_key_exists($fullname, $sessiontrainers)) {
+                        $sessiontrainers[$fullname] = $fullname;
                     }
                 }
-            } else {
-                if (!empty($trainerlists[$cm->id])) {
-                    $session->trainers = $trainerlists[$cm->id];
+                if (!empty($sessiontrainers)) {
+                    $session->trainers = $sessiontrainers;
+                    $alltrainers[$session->cmid] = $sessiontrainers;
                 } else {
                     $session->trainers = '';
+                    $alltrainers[$session->cmid] = '';
                 }
+            }
+        } else {
+            if (!empty($alltrainers[$session->cmid])) {
+                $session->trainers = $alltrainers[$session->cmid];
+            } else {
+                $session->trainers = '';
             }
         }
     }
+
+    // cache the trainerlist with an expiry of 15 minutes to help speed up the db load
+    $cachevalue = serialize($alltrainers);
+    $expiry = time() + TRAINER_CACHE_TIMEOUT * 60;
+    set_cache_flag('blocks/facetoface', 'trainers', $cachevalue, $expiry);
+
 }
