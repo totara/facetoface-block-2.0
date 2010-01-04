@@ -49,8 +49,6 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     print '</tr>';
     $even = false; // used to colour rows
     foreach ($dates as $date) {
-        // get the session dates
-        $sessiondates = facetoface_get_session_dates($date->sessionid);
 
         // include the grades in the display
         if ($includegrades) {
@@ -83,12 +81,12 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
         print '<td><a href="'.$facetofacelink.$date->facetofaceid.'">'.format_string($date->name).'</a></td>';
         print '<td>'.format_string($date->location).'</td>';
         print '<td>';
-        foreach ($sessiondates as $sessiondate) {
+        foreach ($date->alldates as $sessiondate) {
             print userdate($sessiondate->timestart, '%d %B %Y').'<br />';
         }
         print '</td>';
         print '<td>';
-        foreach ($sessiondates as $sessiondate) {
+        foreach ($date->alldates as $sessiondate) {
             print userdate($sessiondate->timestart, '%I:%M %p').' - '.userdate($sessiondate->timefinish, '%I:%M %p').'<br />';
         }
         print '</td>';
@@ -127,6 +125,8 @@ function group_session_dates($sessions) {
 
     foreach ($sessions as $session) {
         if (!array_key_exists($session->sessionid,$retarray)) {
+            $alldates = array();
+
             // clone the session object so we don't override the existing object
             $newsession = clone($session);
             $newsession->timestart = $newsession->timestart;
@@ -146,6 +146,10 @@ function group_session_dates($sessions) {
         if (isset($session->status) and $session->status == 0) {
            $retarray[$session->sessionid]->status = $session->status;
         }
+
+        $alldates[$session->id]->timestart = $session->timestart;
+        $alldates[$session->id]->timefinish = $session->timefinish;
+        $retarray[$session->sessionid]->alldates = $alldates;
     }
     return $retarray;
 }
