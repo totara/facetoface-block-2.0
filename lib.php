@@ -481,8 +481,8 @@ function add_trainer_info(&$sessions)
                     }
                 }
                 if (!empty($sessiontrainers)) {
-                    $session->trainers = $sessiontrainers;
-                    $alltrainers[$session->cmid] = $sessiontrainers;
+                    $session->trainers = asort($sessiontrainers);
+                    $alltrainers[$session->cmid] = asort($sessiontrainers);
                 } else {
                     $session->trainers = '';
                     $alltrainers[$session->cmid] = '';
