@@ -117,7 +117,7 @@ print_box_start('generalbox clearfix');
 $row[] = new tabobject('d', "calendar.php?tab=d&amp;$baseparams#sessionlist", get_string('tab:bydate','block_facetoface'));
 $row[] = new tabobject('c', "calendar.php?tab=c&amp;$baseparams#sessionlist", get_string('tab:bycourse','block_facetoface'));
 $tabs[] = $row;
-print '<a name="sessionlist"/><div>';
+print '<a name="sessionlist"></a><div>';
 print_tabs($tabs, $currenttab);
 $sessionsbydate = get_sessions_by_date($sessionids, $displayinfo);
 if ('c' == $currenttab) {
