@@ -97,16 +97,9 @@ if ($notice = get_notice($activefilters)) {
 // Calendar box
 echo '<div id="calendarcontainer">';
 print_box_start('generalbox monthlycalendar');
-$courses = false;
-$groups = false;
-$users = false;
-if (empty($USER->id) or isguest()) {
-    $defaultcourses = calendar_get_default_courses();
-    calendar_set_filters($courses, $groups, $users, $defaultcourses, $defaultcourses);
-}
-else {
-    calendar_set_filters($courses, $groups, $users);
-}
+$courses = true; // display all courses
+$groups = false; // don't show group events
+$users = $USER->id; // show current user events
 $courseid = SITEID;
 $displayinfo = get_display_info($day, $month, $year);
 show_month_detailed($baseparams, $displayinfo, $month, $year, $courses, $groups, $users, $courseid, $activefilters);
@@ -362,57 +355,6 @@ function show_month_detailed($baseparams, $display, $m, $y, $courses, $groups, $
     echo "</tr>\n"; // Last row ends
 
     echo "</table>\n"; // Tabular display of days ends
-
-	// OK, now for the filtering display
-    echo '<div class="filters"><table summary=""><tr>';
-    $getvars = "tab=$currenttab&amp;$baseparams";
-
-    // Global events
-    if($SESSION->cal_show_global) {
-        echo '<td class="event_global" style="width: 8px;"></td><td><strong>'.get_string('globalevents', 'calendar').':</strong> ';
-        echo get_string('shown', 'calendar').' (<a href="set.php?var=showglobal&amp;'.$getvars.'">'.get_string('clickhide', 'calendar').'</a>)</td>'."\n";
-    }
-    else {
-        echo '<td style="width: 8px;"></td><td><strong>'.get_string('globalevents', 'calendar').':</strong> ';
-        echo get_string('hidden', 'calendar').' (<a href="set.php?var=showglobal&amp;'.$getvars.'">'.get_string('clickshow', 'calendar').'</a>)</td>'."\n";
-    }
-
-    // Course events
-    if(!empty($SESSION->cal_show_course)) {
-        echo '<td class="event_course" style="width: 8px;"></td><td><strong>'.get_string('courseevents', 'calendar').':</strong> ';
-        echo get_string('shown', 'calendar').' (<a href="set.php?var=showcourses&amp;'.$getvars.'">'.get_string('clickhide', 'calendar').'</a>)</td>'."\n";
-    }
-    else {
-        echo '<td style="width: 8px;"></td><td><strong>'.get_string('courseevents', 'calendar').':</strong> ';
-        echo get_string('hidden', 'calendar').' (<a href="set.php?var=showcourses&amp;'.$getvars.'">'.get_string('clickshow', 'calendar').'</a>)</td>'."\n";
-    }
-
-    echo "</tr>\n";
-
-    if(!empty($USER->id) && !isguest()) {
-        echo '<tr>';
-        // Group events
-        if($SESSION->cal_show_groups) {
-            echo '<td class="event_group" style="width: 8px;"></td><td><strong>'.get_string('groupevents', 'calendar').':</strong> ';
-            echo get_string('shown', 'calendar').' (<a href="set.php?var=showgroups&amp;'.$getvars.'">'.get_string('clickhide', 'calendar').'</a>)</td>'."\n";
-        }
-        else {
-            echo '<td style="width: 8px;"></td><td><strong>'.get_string('groupevents', 'calendar').':</strong> ';
-            echo get_string('hidden', 'calendar').' (<a href="set.php?var=showgroups&amp;'.$getvars.'">'.get_string('clickshow', 'calendar').'</a>)</td>'."\n";
-        }
-        // User events
-        if($SESSION->cal_show_user) {
-            echo '<td class="event_user" style="width: 8px;"></td><td><strong>'.get_string('userevents', 'calendar').':</strong> ';
-            echo get_string('shown', 'calendar').' (<a href="set.php?var=showuser&amp;'.$getvars.'">'.get_string('clickhide', 'calendar').'</a>)</td>'."\n";
-        }
-        else {
-            echo '<td style="width: 8px;"></td><td><strong>'.get_string('userevents', 'calendar').':</strong> ';
-            echo get_string('hidden', 'calendar').' (<a href="set.php?var=showuser&amp;'.$getvars.'">'.get_string('clickshow', 'calendar').'</a>)</td>'."\n";
-        }
-        echo "</tr>\n";
-    }
-
-    echo '</table></div>';
 }
 
 function top_controls($month, $year)
