@@ -319,7 +319,7 @@ function show_month_detailed($baseparams, $display, $m, $y, $courses, $groups, $
         if(!empty($class)) {
             $class = ' class="'.trim($class).'"';
         }
-        $cellid = "cell$y". ($m < 10 ? "0$m" : $m) .($day < 10 ? "0$day" : $day);
+        $cellid = sprintf('cell%d%02d%02d',$y,$m,$day);// outputs 'cellYYYYMMDD' string as intended
         echo "<td id=\"$cellid\" $class>$cell";
 
         if(isset($eventsbyday[$day])) {
