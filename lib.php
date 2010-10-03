@@ -14,7 +14,7 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     $attendeelink = $CFG->wwwroot.'/mod/facetoface/attendees.php?s=';
     $bookinghistorylink = $CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session=';
 
-    print '<table border="1" cellpadding="0" summary="'.get_string('sessiondatestable', 'block_facetoface').'"><tr>';
+    print '<table border="1" cellpadding="5" summary="'.get_string('sessiondatestable', 'block_facetoface').'"><tr>';
 
     // include the course id in the display
     if ($includecourseid) {
@@ -22,12 +22,6 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     }
 
     print '<th>'.get_string('course').'</th>';
-
-    // include the course id in the display
-    if ($includetrainers) {
-        print '<th>'.get_string('trainer','block_facetoface').'</th>';
-    }
-
     print '<th>'.get_string('name').'</th>';
     print '<th>'.get_string('location').'</th>';
     print '<th>'.get_string('date','block_facetoface').'</th>';
@@ -35,14 +29,9 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
     if ($includebookings) {
         print '<th>'.get_string('nbbookings', 'block_facetoface').'</th>';
     }
-    
-    // include the grades in the display
-    if ($includegrades) {
-        print '<th>'.get_string('grade').'</th>';
-    }
 
-    // include the status (enrolled,cancelled) in the display
-    if ($includestatus) {
+    // include the grades/status in the display
+    if ($includegrades || $includestatus) {
         print '<th>'.get_string('status').'</th>';
     }
 
@@ -67,17 +56,6 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
         }
         print '<td><a href="'.$courselink.$date->courseid.'">'.format_string($date->coursename).'</a></td>';
 
-        // include the trainer(s) in the display
-        if ($includetrainers) {
-            print '<td>';
-            if ($date->trainers and count($date->trainers) > 0) {
-                foreach ($date->trainers as $trainer) {
-                    print $trainer.'<br />'; // FIXME: re-add the link to trainers profile page
-                }
-            }
-            print '</td>';
-        }
-
         print '<td><a href="'.$facetofacelink.$date->facetofaceid.'">'.format_string($date->name).'</a></td>';
         print '<td>'.format_string($date->location).'</td>';
         print '<td>';
@@ -93,23 +71,14 @@ function print_dates($dates, $includebookings, $includegrades=false, $includesta
         if ($includebookings) {
             print '<td><a href="'.$attendeelink.$date->sessionid.'">'.(isset($date->nbbookings)? format_string($date->nbbookings) : 0).'</a></td>';
         }
-        
-        // include the grades in the display
-        if ($includegrades) {
-            if ((int)$grade->grade > 0) {
-                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.format_string($grade->grade).'</a></td>';
-            } else {
-                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('didntattend','block_facetoface').'</a></td>';
+
+        // include the grades/status in the display
+        foreach (array($includegrades, $includestatus) as $col) {
+            if ($col) {
+                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.ucfirst(facetoface_get_status($date->status)).'</a></td>';
             }
         }
 
-        if ($includestatus) {
-            if ($date->status == 0) {
-                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('enrolled','block_facetoface').'</a></td>';
-            } else {
-                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.get_string('cancelled','block_facetoface').'</a></td>';
-            }
-        }
         print '</tr>';
     }
     print '</table>';
@@ -344,10 +313,15 @@ function add_location_info(&$sessions)
         return;
     }
 
+    $locationfieldid = get_field('facetoface_session_field', 'id', 'shortname', 'location');
+    if (!$locationfieldid) {
+        return array();
+    }
+
     $alllocations = get_records_sql("SELECT d.sessionid, d.data
-                                       FROM {$CFG->prefix}facetoface_session_data d
-                                       JOIN {$CFG->prefix}facetoface_session_field f ON f.id = d.fieldid
-                                      WHERE f.shortname = 'location'");
+              FROM {$CFG->prefix}facetoface_sessions s
+              JOIN {$CFG->prefix}facetoface_session_data d ON d.sessionid = s.id
+             WHERE d.fieldid = $locationfieldid");
 
     foreach ($sessions as $session) {
         if (!empty($alllocations[$session->sessionid])) {
@@ -387,51 +361,35 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
                                     GROUP BY c.id, c.idnumber, c.fullname, s.id, f.id, cm.id
                                     ORDER BY c.fullname ASC");
 
-    // retrieve the cached trainerlist flag
-    if (!$flag = get_cache_flags('blocks/facetoface')) {
-        add_trainer_info($results);
-    } else {
-        if (empty($flag['trainers'])) {
-            add_trainer_info($results);
-        } else {
-            // unserialize the cached trainers list
-            $data   = unserialize($flag['trainers']);
-            foreach (array_values($data) as $trainerlist) {
-                foreach($trainerlist as $value) {
-                    $trainers[$value] = $value;
-                }
-            }
-        }
-    }
-
     add_location_info($results);
 
-    foreach ($results as $result) {
-
-        // create unique list of coursenames
-        if (!array_key_exists($result->fullname, $coursenames)) {
-            $coursenames[$result->fullname] = $result->fullname;
-        }
-
-        // created unique list of locations
-        if (isset($result->location)) {
-            if (!array_key_exists($result->location, $locations)) {
-                $locations[$result->location] = $result->location;
+    if (!empty($results)) {
+        foreach ($results as $result) {
+            // create unique list of coursenames
+            if (!array_key_exists($result->fullname, $coursenames)) {
+                $coursenames[$result->fullname] = $result->fullname;
             }
-        }
 
-        // create unique list of courseids
-        if (!array_key_exists($result->idnumber, $courseids) and $result->idnumber) {
-            $courseids[$result->idnumber] = $result->idnumber;
-        }
+            // created unique list of locations
+            if (isset($result->location)) {
+                if (!array_key_exists($result->location, $locations)) {
+                    $locations[$result->location] = $result->location;
+                }
+            }
 
-        // create unique list of trainers
-        // check if $trainers hasn't already been populated by the cached list
-        if (empty($trainers)) {
-            if (isset($result->trainers)) {
-                foreach ($result->trainers as $trainer) {
-                    if (!array_key_exists($trainer,$trainers)) {
-                        $trainers[$trainer] = $trainer;
+            // create unique list of courseids
+            if (!array_key_exists($result->idnumber, $courseids) and $result->idnumber) {
+                $courseids[$result->idnumber] = $result->idnumber;
+            }
+
+            // create unique list of trainers
+            // check if $trainers hasn't already been populated by the cached list
+            if (empty($trainers)) {
+                if (isset($result->trainers)) {
+                    foreach ($result->trainers as $trainer) {
+                        if (!array_key_exists($trainer,$trainers)) {
+                            $trainers[$trainer] = $trainer;
+                        }
                     }
                 }
             }
@@ -446,10 +404,6 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
                            print_date_selector('endday', 'endmonth', 'endyear', $enddate, true));
     $table->data[] = array('<label for="menucoursename">'.get_string('coursefullname','block_facetoface').': </label>',
                            choose_from_menu($coursenames, 'coursename', $currentcoursename, get_string('all'), '', '', true));
-    $table->data[] = array('<label for="menucourseid">'.get_string('idnumbercourse').': </label>',
-                           choose_from_menu($courseids, 'courseid', $currentcourseid, get_string('all'), '', '', true));
-    $table->data[] = array('<label for="menutrainer">'.get_string('trainer', 'block_facetoface').': </label>',
-                           choose_from_menu($trainers, 'trainer', $currenttrainer, get_string('all'), '', '', true));
     $table->data[] = array('<label for="menulocation">'.get_string('location', 'facetoface').': </label>',
                            choose_from_menu($locations, 'location', $currentlocation, get_string('all'), '', '', true));
     print_table($table);
@@ -465,24 +419,33 @@ function add_trainer_info(&$sessions)
     $moduleid = get_field('modules', 'id', 'name','facetoface');
     $alltrainers = array(); // all possible trainers for filter dropdown
 
-    foreach ($sessions as $session) {
+    // find role id for trainer
+    $trainerroleid = get_field('role','id','shortname','facilitator');
 
+    foreach ($sessions as $session) {
         // individual session trainers
         $sessiontrainers = array();
+
+        // get trainers for this session from session_roles table
+        // set to null if trainer role id not found
+        $sess_trainers = (isset($trainerroleid)) ? get_records_select('facetoface_session_roles',"sessionid={$session->sessionid} and roleid={$trainerroleid}") : null;
 
         // check if the module instance has already had trainer info added
         if (!array_key_exists($session->cmid, $alltrainers)) {
             $context = get_context_instance(CONTEXT_MODULE, $session->cmid);
-            if ($users = get_users_by_capability($context, 'mod/facetoface:viewattendees', 'u.id, u.firstname, u.lastname', '', '', '', '', '', false)) {
-                foreach ($users as $user) {
+
+            if($sess_trainers && is_array($sess_trainers)) {
+                foreach($sess_trainers as $sess_trainer) {
+                    $user = get_record('user','id',$sess_trainer->userid);
                     $fullname = fullname($user);
                     if (!array_key_exists($fullname, $sessiontrainers)) {
                         $sessiontrainers[$fullname] = $fullname;
                     }
                 }
                 if (!empty($sessiontrainers)) {
-                    $session->trainers = asort($sessiontrainers);
-                    $alltrainers[$session->cmid] = asort($sessiontrainers);
+                    asort($sessiontrainers);
+                    $session->trainers = $sessiontrainers;
+                    $alltrainers[$session->cmid] = $sessiontrainers;
                 } else {
                     $session->trainers = '';
                     $alltrainers[$session->cmid] = '';
