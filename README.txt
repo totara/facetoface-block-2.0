@@ -45,7 +45,7 @@ Bugs/patches
 
 Feel free to send bug reports (and/or patches!) to the current maintainer:
 
-  Francois Marier <francois@catalyst.net.nz>
+  Alastair Munro <alastair.munro@totaralms.com>
 
 
 Changes
