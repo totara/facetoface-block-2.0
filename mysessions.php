@@ -39,23 +39,23 @@ $courseidsql = $courseid ? " AND c.idnumber = '$courseid'" : '';
 $records = '';
 
 // Get all Face-to-face session dates from the DB
-$records = get_records_sql("SELECT d.id, cm.id AS cmid, c.id AS courseid, c.fullname AS coursename,
+$records = $DB->get_records_sql("SELECT d.id, cm.id AS cmid, c.id AS courseid, c.fullname AS coursename,
                                    c.idnumber as cidnumber, f.name, f.id as facetofaceid, s.id as sessionid,
                                    d.timestart, d.timefinish, su.nbbookings
-                              FROM {$CFG->prefix}facetoface_sessions_dates d
-                              JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
-                              JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
+                              FROM {facetoface_sessions_dates} d
+                              JOIN {facetoface_sessions} s ON s.id = d.sessionid
+                              JOIN {facetoface} f ON f.id = s.facetoface
                    LEFT OUTER JOIN (SELECT sessionid, count(sessionid) AS nbbookings
-                                      FROM {$CFG->prefix}facetoface_signups su
-                                 LEFT JOIN {$CFG->prefix}facetoface_signups_status ss
+                                      FROM {facetoface_signups} su
+                                 LEFT JOIN {facetoface_signups_status} ss
                                         ON ss.signupid = su.id AND ss.superceded = 0
                                      WHERE ss.statuscode >= ".MDL_F2F_STATUS_BOOKED."
                                   GROUP BY sessionid) su ON su.sessionid = d.sessionid
-                              JOIN {$CFG->prefix}course c ON f.course = c.id
+                              JOIN {course} c ON f.course = c.id
 
-                              JOIN {$CFG->prefix}course_modules cm ON cm.course = f.course
+                              JOIN {course_modules} cm ON cm.course = f.course
                                    AND cm.instance = f.id
-                              JOIN {$CFG->prefix}modules m ON m.id = cm.module
+                              JOIN {modules} m ON m.id = cm.module
 
                              WHERE d.timestart >= $startdate AND d.timefinish <= $enddate
                                    AND m.name = 'facetoface'
@@ -151,8 +151,11 @@ $groupeddates = group_session_dates($dates);
 $pagetitle = format_string(get_string('facetoface', 'facetoface') . ' ' . get_string('sessions', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
-print_header_simple($pagetitle, '', $navigation);
-print_box_start();
+$PAGE->set_title($pagetitle);
+$PAGE->set_heading('');
+/* SCANMSG: may be additional work required for $navigation variable */
+echo $OUTPUT->header();
+echo $OUTPUT->box_start();
 
 // show tabs
 $currenttab = 'attendees';
@@ -194,5 +197,6 @@ if ($nbdates > 0) {
     print '<p>'.get_string('sessiondatesviewattendeeszero', 'block_facetoface').'</p>';
 }
 
-print_box_end();
-print_footer();
+echo $OUTPUT->box_end();
+echo $OUTPUT->print_footer();
+

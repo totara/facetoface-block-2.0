@@ -59,7 +59,12 @@ else {
 $pagetitle = get_string('trainingcalendar', 'block_facetoface');
 $navlinks[] = array('name' => $pagetitle);
 $navigation = build_navigation($navlinks);
-print_header_simple($pagetitle, '', $navigation, '', '', true);
+$PAGE->set_title($pagetitle);
+$PAGE->set_heading('');
+/* SCANMSG: may be additional work required for $navigation variable */
+$PAGE->set_focuscontrol('');
+$PAGE->set_cacheable(true);
+echo $OUTPUT->header();
 
 // Custom field filters
 $tablecells = array();
@@ -78,21 +83,21 @@ if (!empty($tablecells)) {
     $table->summary = get_string('filters:tablesummary', 'block_facetoface');
 
     print '<form method="get" action="calendar.php">';
-    print_box_start('generalbox calendarfilters');
+    echo $OUTPUT->box_start('generalbox calendarfilters');
     print '<input type="hidden" name="tab" value="'.$currenttab.'"/>';
     print '<input type="hidden" name="cal_d" value="'.$day.'"/>';
     print '<input type="hidden" name="cal_m" value="'.$month.'"/>';
     print '<input type="hidden" name="cal_y" value="'.$year.'"/>';
-    print_table($table);
-    print_box_end();
+    echo html_writer::table($table);
+    echo $OUTPUT->box_end();
     print '</form>';
 }
 
 // Important notices
 if ($notice = get_notice($activefilters)) {
-    print_box_start();
+    echo $OUTPUT->box_start();
     print format_text($notice, FORMAT_HTML);
-    print_box_end();
+    echo $OUTPUT->box_end();
 }
 
 // Display settings
@@ -106,7 +111,7 @@ get_sessions($displayinfo, $groups, $users, $courses, $activefilters, $events, $
 $waitlistedsessions = get_matching_waitlisted_sessions($activefilters);
 
 // List of all available sessions
-print_box_start('generalbox clearfix');
+echo $OUTPUT->box_start('generalbox clearfix');
 $row[] = new tabobject('m', "calendar.php?tab=m&amp;$baseparams#sessionlist", get_string('tab:calendar','block_facetoface'));
 $row[] = new tabobject('c', "calendar.php?tab=c&amp;$baseparams#sessionlist", get_string('tab:bycourse','block_facetoface'));
 $row[] = new tabobject('d', "calendar.php?tab=d&amp;$baseparams#sessionlist", get_string('tab:bydate','block_facetoface'));
@@ -125,11 +130,11 @@ else {
     show_month_detailed($baseparams, $displayinfo, $month, $year, $courses, $groups, $users, $courseid, $activefilters, $waitlistedsessions, $events);
 }
 print '</div>';
-print_box_end();
+echo $OUTPUT->box_end();
 
 print_tooltips($sessionsbydate);
 
-print_footer();
+echo $OUTPUT->print_footer();
 
 function get_display_info($d, $m, $y)
 {
@@ -233,7 +238,7 @@ function show_month_detailed($baseparams, $display, $m, $y, $courses, $groups, $
     // Extract information: events vs. time
     calendar_events_by_day($events, $m, $y, $eventsbyday, $durationbyday, $typesbyday, $courses);
     echo '<div id="calendarcontainer">';
-    print_box_start('generalbox monthlycalendar');
+    echo $OUTPUT->box_start('generalbox monthlycalendar');
     $text = '';
     echo '<div class="header">'.$text.'</div>';
 
@@ -361,13 +366,13 @@ function show_month_detailed($baseparams, $display, $m, $y, $courses, $groups, $
 
     echo "</table>\n"; // Tabular display of days ends
 
-    print_box_end();
+    echo $OUTPUT->box_end();
     echo '</div>';
 
     // Advertising side-bar
-    print_box_start('generalbox calendarsidebar');
+    echo $OUTPUT->box_start('generalbox calendarsidebar');
     print_waitlisted_content($waitlistedsessions);
-    print_box_end();
+    echo $OUTPUT->box_end();
 }
 
 function top_controls($month, $year)
@@ -408,7 +413,7 @@ function customfield_chooser($field)
     $values = array();
     switch ($field->type) {
     case CUSTOMFIELD_TYPE_TEXT:
-        if ($records = get_records('facetoface_session_data', 'fieldid', $field->id, 'data', 'id, data')) {
+        if ($records = $DB->get_records('facetoface_session_data', array('fieldid' => $field->id), 'data', 'id, data')) {
             foreach ($records as $record) {
                 $values[$record->data] = $record->data;
             }
@@ -444,7 +449,11 @@ function customfield_chooser($field)
         $currentvalue = $activefilters[$field->id];
     }
 
-    $dropdown = choose_from_menu($options, $fieldname, $currentvalue, $nothing, '', $nothingvalue, true);
+    $select = moodle_select::make($options, $fieldname, $currentvalue);
+    $select->nothinglabel = $nothing
+    $select->nothingvalue = $nothingvalue
+    $dropdown = $OUTPUT->select($select);
+
     return format_string($field->name) . ': ' . $dropdown;
 }
 
@@ -460,7 +469,7 @@ function matches_filter($filterid, $filtervalue, $sessionid)
     }
 
     // Warning: this get_field doesn't show up in the total number of DB queries, but it's called a lot!
-    $sessionvalue = get_field('facetoface_session_data', 'data', 'fieldid', $filterid, 'sessionid', $sessionid);
+    $sessionvalue = $DB->get_field('facetoface_session_data', 'data', array('fieldid' => $filterid, 'sessionid' => $sessionid));
     if (empty($sessionvalue)) {
         // No value at all => no match
         return false;
@@ -490,10 +499,10 @@ function get_sessions_by_date($sessionids, $displayinfo)
     $ids = implode(', ', $sessionids);
     $timestart = usertime($displayinfo->tstart);
     $timeend = usertime($displayinfo->tend);
-    $sessions = get_records_sql("SELECT d.id, s.id AS sessionid, f.id AS facetofaceid, f.name, s.datetimeknown, d.timestart, d.timefinish
-                                   FROM {$CFG->prefix}facetoface f
-                                   JOIN {$CFG->prefix}facetoface_sessions s ON f.id = s.facetoface
-                                   JOIN {$CFG->prefix}facetoface_sessions_dates d ON d.sessionid = s.id
+    $sessions = $DB->get_records_sql("SELECT d.id, s.id AS sessionid, f.id AS facetofaceid, f.name, s.datetimeknown, d.timestart, d.timefinish
+                                   FROM {facetoface} f
+                                   JOIN {facetoface_sessions} s ON f.id = s.facetoface
+                                   JOIN {facetoface_sessions_dates} d ON d.sessionid = s.id
                                   WHERE s.id IN ($ids) AND d.timestart >= $timestart AND d.timestart <= $timeend
                                ORDER BY d.timestart");
     if (empty($sessions)) {
@@ -520,10 +529,10 @@ function get_sessions_by_course($sessionids, $displayinfo, $waitlistedsessions)
 
     $timestart = usertime($displayinfo->tstart);
     $timeend = usertime($displayinfo->tend);
-    $sessions = get_records_sql("SELECT d.id, s.id AS sessionid, f.id AS facetofaceid, f.name, s.datetimeknown, d.timestart, d.timefinish
-                                   FROM {$CFG->prefix}facetoface f
-                                   JOIN {$CFG->prefix}facetoface_sessions s ON f.id = s.facetoface
-                                   JOIN {$CFG->prefix}facetoface_sessions_dates d ON d.sessionid = s.id
+    $sessions = $DB->get_records_sql("SELECT d.id, s.id AS sessionid, f.id AS facetofaceid, f.name, s.datetimeknown, d.timestart, d.timefinish
+                                   FROM {facetoface} f
+                                   JOIN {facetoface_sessions} s ON f.id = s.facetoface
+                                   JOIN {facetoface_sessions_dates} d ON d.sessionid = s.id
                                   WHERE s.id IN ($ids) AND ((d.timestart >= $timestart AND d.timestart <= $timeend) OR s.datetimeknown = 0)
                                ORDER BY f.name, d.timestart");
     if (empty($sessions)) {
@@ -558,16 +567,16 @@ function print_sessions($sessions, $tab)
 
         if ($currentday < $day) {
             if ($currentday > 0) {
-                print_table($currenttable);
+                echo html_writer::table($currenttable);
             }
             $currenttable = new_session_table();
 
-            print_heading(strftime(get_string('strftimedate'), $timestart), '', 3);
+            echo $OUTPUT->heading(strftime(get_string('strftimedate'), $timestart), 3);
             $currentday = $day;
         }
 
         // Custom fields
-        $customdata = get_records('facetoface_session_data', 'sessionid', $session->sessionid, '', 'fieldid, data');
+        $customdata = $DB->get_records('facetoface_session_data', array('sessionid' => $session->sessionid), '', 'fieldid, data');
         $nbcustomcolumns = 0;
         foreach ($customfields as $field) {
             if (empty($field->showinsummary)) {
@@ -621,7 +630,7 @@ function print_sessions($sessions, $tab)
         $currenttable->size[] = '6em';
         $currenttable->size[] = '6em';
     }
-    print_table($currenttable);
+    echo html_writer::table($currenttable);
 }
 
 function new_session_table()
@@ -640,7 +649,7 @@ function get_notice($activefilters)
     global $customfields;
 
     // Get all notices
-    if (!$allnotices = get_records('facetoface_notice', '', '', 'id', 'id')) {
+    if (!$allnotices = $DB->get_records('facetoface_notice', array(), 'id', 'id')) {
         return false; // no matches
     }
 
@@ -657,7 +666,7 @@ function get_notice($activefilters)
         if ($filternb > 1) {
             $joincondition = "d{$filternb}.noticeid = d". ($filternb - 1) .'.noticeid';
         }
-        $filterjoins .= " JOIN {$CFG->prefix}facetoface_notice_data d$filternb ON $joincondition";
+        $filterjoins .= " JOIN {facetoface_notice_data} d$filternb ON $joincondition";
 
         $value = addslashes($fieldvalue);
         $whereclause = "d{$filternb}.data <> '$value'";
@@ -670,12 +679,12 @@ function get_notice($activefilters)
 
     // Get notices to filter out
     $sql = "SELECT DISTINCT n.id
-                  FROM {$CFG->prefix}facetoface_notice n
+                  FROM {facetoface_notice} n
                   $filterjoins
                  WHERE 1 = 0
                  $filterwhere
               ORDER BY n.id";
-    if (!$nonmatchingnotices = get_records_sql($sql)) {
+    if (!$nonmatchingnotices = $DB->get_records_sql($sql)) {
         $nonmatchingnotices = array();
     }
 
@@ -688,7 +697,7 @@ function get_notice($activefilters)
     // Select a notice at random
     shuffle($noticeids);
     $randomnoticeid = reset($noticeids);
-    return get_field('facetoface_notice', 'text', 'id', $randomnoticeid);
+    return $DB->get_field('facetoface_notice', 'text', array('id' => $randomnoticeid));
 }
 
 function get_matching_waitlisted_sessions($activefilters)
@@ -709,7 +718,7 @@ function get_matching_waitlisted_sessions($activefilters)
         if ($filternb > 1) {
             $joincondition = "d{$filternb}.sessionid = d". ($filternb - 1) .'.sessionid';
         }
-        $filterjoins .= " JOIN {$CFG->prefix}facetoface_session_data d$filternb ON $joincondition";
+        $filterjoins .= " JOIN {facetoface_session_data} d$filternb ON $joincondition";
 
         $value = addslashes($fieldvalue);
         $whereclause = "d{$filternb}.data = '$value'";
@@ -721,9 +730,9 @@ function get_matching_waitlisted_sessions($activefilters)
     }
 
     // Get all waitlisted sessions
-    $sessions = get_records_sql("SELECT s.id, s.facetoface, f.name
-                                   FROM {$CFG->prefix}facetoface f
-                                   JOIN {$CFG->prefix}facetoface_sessions s ON f.id = s.facetoface
+    $sessions = $DB->get_records_sql("SELECT s.id, s.facetoface, f.name
+                                   FROM {facetoface} f
+                                   JOIN {facetoface_sessions} s ON f.id = s.facetoface
                                    $filterjoins
                                   WHERE f.showoncalendar = 1 AND s.datetimeknown = 0
                                   $filterwhere");
@@ -766,7 +775,7 @@ function print_waitlisted_content($waitlistedsessions)
         $html .= '</div>';
 
         // Getting only the description of the sessions to display in order to save some memory
-        $description = get_field('facetoface', 'description', 'id', $session->facetoface);
+        $description = $DB->get_field('facetoface', 'description', array('id' => $session->facetoface));
         if (!empty($description)) {
             $description = format_text($description, FORMAT_HTML);
             $html .= "<div>$description</div>";
@@ -819,3 +828,4 @@ function tooltip_contents($sessionlist)
     $html .= '</ul></p>';
     return $html;
 }
+

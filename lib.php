@@ -231,10 +231,10 @@ function export_spreadsheet($dates, $format, $includebookings) {
  *  - email
  */
 function get_users_search($search) {
-    global $CFG;
+    global $CFG, $DB;
 
     //to allow case-insensitive search for postgesql
-    if ($CFG->dbfamily == 'postgres') {
+    if ($DB->get_dbfamily == 'postgres') {
         $LIKE = 'ILIKE';
     } else {
         $LIKE = 'LIKE';
@@ -261,7 +261,7 @@ function get_users_search($search) {
             if ($fullnamesearch) {
                 $fullnamesearch .= " $searchterm";
             } else {
-                $fullnamesearch .= sql_fullname() ." $LIKE '%$searchterm";
+                $fullnamesearch .= $DB->sql_fullname() ." $LIKE '%$searchterm";
             }
         }
         if (count($searchvalues) < 2) {
@@ -279,7 +279,7 @@ function get_users_search($search) {
     }
 
     $sql = "SELECT u.*
-            FROM {$CFG->prefix}user u
+            FROM {user} u
             WHERE (( $usernamesearch ) OR ( $emailsearch )) ";
 
     if ($fullnamesearch) {
@@ -296,7 +296,7 @@ function get_users_search($search) {
 
     $sql .= " ORDER BY " . $sort;
 
-    if ($records = get_records_sql($sql)) {
+    if ($records = $DB->get_records_sql($sql)) {
         return $records;
     } else {
         return array();
@@ -314,14 +314,14 @@ function add_location_info(&$sessions)
         return;
     }
 
-    $locationfieldid = get_field('facetoface_session_field', 'id', 'shortname', 'location');
+    $locationfieldid = $DB->get_field('facetoface_session_field', 'id', array('shortname' => 'location'));
     if (!$locationfieldid) {
         return array();
     }
 
-    $alllocations = get_records_sql("SELECT d.sessionid, d.data
-              FROM {$CFG->prefix}facetoface_sessions s
-              JOIN {$CFG->prefix}facetoface_session_data d ON d.sessionid = s.id
+    $alllocations = $DB->get_records_sql("SELECT d.sessionid, d.data
+              FROM {facetoface_sessions} s
+              JOIN {facetoface_session_data} d ON d.sessionid = s.id
              WHERE d.fieldid = $locationfieldid");
 
     foreach ($sessions as $session) {
@@ -351,12 +351,12 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
     $courseids = array();
     $trainers = array();
 
-    $results = get_records_sql("SELECT c.id as courseid, c.idnumber, c.fullname, s.id AS sessionid,
+    $results = $DB->get_records_sql("SELECT c.id as courseid, c.idnumber, c.fullname, s.id AS sessionid,
                                        f.id AS facetofaceid, cm.id AS cmid
-                                    FROM {$CFG->prefix}course c
-                                    JOIN {$CFG->prefix}facetoface f ON f.course = c.id
-                                    JOIN {$CFG->prefix}facetoface_sessions s ON f.id = s.facetoface
-                                    JOIN {$CFG->prefix}course_modules cm ON cm.course = f.course
+                                    FROM {course} c
+                                    JOIN {facetoface} f ON f.course = c.id
+                                    JOIN {facetoface_sessions} s ON f.id = s.facetoface
+                                    JOIN {course_modules} cm ON cm.course = f.course
                                          AND cm.instance = f.id
                                     WHERE c.visible = 1
                                     GROUP BY c.id, c.idnumber, c.fullname, s.id, f.id, cm.id
@@ -398,16 +398,26 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
     }
 
     // Build or print result
-    $table = new object();
+    $table = new html_table();
     $table->tablealign = 'left';
     $table->data[] = array('<label for="menustartdate">'.get_string('daterange', 'block_facetoface').'</label>',
-                           print_date_selector('startday', 'startmonth', 'startyear', $startdate, true) . ' to ' .
-                           print_date_selector('endday', 'endmonth', 'endyear', $enddate, true));
+                           html_writer::select_time('days', 'startday', $startdate) .
+                           html_writer::select_time('days', 'startmonth', $startdate) .
+                           html_writer::select_time('days', 'startyear', $startdate) . ' to ' .
+                           html_writer::select_time('days', 'endday', $enddate) .
+                           html_writer::select_time('months', 'endmonth', $enddate) .
+                           html_writer::select_time('years', 'startyear', $enddate));
+    $coursenameselect = moodle_select::make($coursenames, 'coursename', $currentcoursename);
+    $coursenameselect->nothinglabel = get_string('all');
+    $coursenameselect->nothingvalue = '';
     $table->data[] = array('<label for="menucoursename">'.get_string('coursefullname','block_facetoface').': </label>',
-                           choose_from_menu($coursenames, 'coursename', $currentcoursename, get_string('all'), '', '', true));
+                           $OUTPUT->select($coursenameselect);
+    $locationselect = moodle_select::make($locations, 'location', $currentlocation);
+    $locationselect->nothinglabel = get_string('all');
+    $locationselect->nothingvalue = '';
     $table->data[] = array('<label for="menulocation">'.get_string('location', 'facetoface').': </label>',
-                           choose_from_menu($locations, 'location', $currentlocation, get_string('all'), '', '', true));
-    print_table($table);
+                           $OUTPUT->select($locationselect);
+    echo html_writer::table($table);
 }
 
 /**
@@ -417,11 +427,11 @@ function add_trainer_info(&$sessions)
 {
     global $CFG;
 
-    $moduleid = get_field('modules', 'id', 'name','facetoface');
+    $moduleid = $DB->get_field('modules', 'id', array('name' => 'facetoface'));
     $alltrainers = array(); // all possible trainers for filter dropdown
 
     // find role id for trainer
-    $trainerroleid = get_field('role','id','shortname','facilitator');
+    $trainerroleid = $DB->get_field('role', 'id', array('shortname' => 'facilitator'));
 
     foreach ($sessions as $session) {
         // individual session trainers
@@ -429,7 +439,7 @@ function add_trainer_info(&$sessions)
 
         // get trainers for this session from session_roles table
         // set to null if trainer role id not found
-        $sess_trainers = (isset($trainerroleid)) ? get_records_select('facetoface_session_roles',"sessionid={$session->sessionid} and roleid={$trainerroleid}") : null;
+        $sess_trainers = (isset($trainerroleid)) ? $DB->get_records_select('facetoface_session_roles',"sessionid={$session->sessionid} and roleid={$trainerroleid}") : null;
 
         // check if the module instance has already had trainer info added
         if (!array_key_exists($session->cmid, $alltrainers)) {
@@ -437,7 +447,7 @@ function add_trainer_info(&$sessions)
 
             if($sess_trainers && is_array($sess_trainers)) {
                 foreach($sess_trainers as $sess_trainer) {
-                    $user = get_record('user','id',$sess_trainer->userid);
+                    $user = $DB->get_record('user', array('id' => $sess_trainer->userid));
                     $fullname = fullname($user);
                     if (!array_key_exists($fullname, $sessiontrainers)) {
                         $sessiontrainers[$fullname] = $fullname;
@@ -467,3 +477,4 @@ function add_trainer_info(&$sessions)
     set_cache_flag('blocks/facetoface', 'trainers', $cachevalue, $expiry);
 
 }
+

@@ -11,16 +11,16 @@ $sid        = required_param('session', PARAM_INT);
 $userid     = optional_param('userid', $USER->id, PARAM_INT);
 
 // get all the required records
-if (!$user = get_record('user','id',$userid)) {
+if (!$user = $DB->get_record('user', array('id' => $userid))) {
     print_error('error:invaliduserid', 'block_facetoface');
 }
 if (!$session = facetoface_get_session($sid)) {
     print_error('error:invalidsessionid', 'block_facetoface');
 }
-if(!$facetoface = get_record('facetoface','id', $session->facetoface)) {
+if(!$facetoface = $DB->get_record('facetoface', array('id' => $session->facetoface))) {
     print_error('error:invalidfacetofaceid', 'block_facetoface');
 }
-if (!$course = get_record('course','id',$facetoface->course)) {
+if (!$course = $DB->get_record('course', array('id' => $facetoface->course))) {
     print_error('error:invalidcourseid', 'block_facetoface');
 }
 
@@ -35,20 +35,23 @@ if ($userid != $USER->id) {
 $pagetitle = format_string(get_string('bookinghistory', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
-print_header_simple($pagetitle, '', $navigation);
-print_box_start();
+$PAGE->set_title($pagetitle);
+$PAGE->set_heading('');
+/* SCANMSG: may be additional work required for $navigation variable */
+echo $OUTPUT->header();
+echo $OUTPUT->box_start();
 
 // Get signups from the DB
-$bookings = get_records_sql("SELECT ss.timecreated, ss.statuscode, ss.grade, ss.note,
+$bookings = $DB->get_records_sql("SELECT ss.timecreated, ss.statuscode, ss.grade, ss.note,
                                    c.id as courseid, c.fullname AS coursename,
                                    f.name, f.id as facetofaceid, s.id as sessionid,
                                    d.id, d.timestart, d.timefinish
-                              FROM {$CFG->prefix}facetoface_sessions_dates d
-                              JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
-                              JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
-                              JOIN {$CFG->prefix}facetoface_signups su ON su.sessionid = s.id
-                              JOIN {$CFG->prefix}facetoface_signups_status ss ON ss.signupid = su.id
-                              JOIN {$CFG->prefix}course c ON f.course = c.id
+                              FROM {facetoface_sessions_dates} d
+                              JOIN {facetoface_sessions} s ON s.id = d.sessionid
+                              JOIN {facetoface} f ON f.id = s.facetoface
+                              JOIN {facetoface_signups} su ON su.sessionid = s.id
+                              JOIN {facetoface_signups_status} ss ON ss.signupid = su.id
+                              JOIN {course} c ON f.course = c.id
                               WHERE su.userid = $user->id AND su.sessionid = $session->id AND f.id = $session->facetoface
                               ORDER BY ss.timecreated ASC");
 
@@ -58,12 +61,12 @@ $sessiontimes = facetoface_get_session_dates($session->id);
 if ($user->id != $USER->id) {
     $fullname = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$course->id.'">'.fullname($user).'</a>';
     $heading = get_string('bookinghistoryfor', 'block_facetoface', $fullname);
-    print_heading($heading, 'center');
+    echo $OUTPUT->heading($heading);
 } else {
     echo "<br />";
 }
 
-print_heading(get_string('sessiondetails', 'block_facetoface'), 'center');
+echo $OUTPUT->heading(get_string('sessiondetails', 'block_facetoface'));
 
 // print the session information
 $cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id);
@@ -106,8 +109,9 @@ if ($bookings and count($bookings) > 0) {
     }
 }
 
-print_heading(get_string('bookinghistory', 'block_facetoface'), 'center');
-print_table($table);
+echo $OUTPUT->heading(get_string('bookinghistory', 'block_facetoface'));
+echo html_writer::table($table);
 
-print_box_end();
-print_footer();
+echo $OUTPUT->box_end();
+echo $OUTPUT->print_footer();
+

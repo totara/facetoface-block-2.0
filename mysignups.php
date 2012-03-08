@@ -22,7 +22,7 @@ $action = optional_param('action',          '', PARAM_ALPHA); // one of: '', exp
 $format = optional_param('format',       'ods', PARAM_ALPHA); // one of: ods, xls
 
 $userid = optional_param('userid', $USER->id, PARAM_INT);
-if (!$user = get_record('user', 'id', $userid)) {
+if (!$user = $DB->get_record('user', array('id' => $userid))) {
     print_error('error:invaliduserid', 'block_facetoface', 'mysignups.php');
 }
 
@@ -52,15 +52,15 @@ if ($search) {
     $users = get_users_search($search);
 } else {
     // Get all Face-to-face signups from the DB
-    $signups = get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursename, f.name,
+    $signups = $DB->get_records_sql("SELECT d.id, c.id as courseid, c.fullname AS coursename, f.name,
                                        f.id as facetofaceid, s.id as sessionid,
                                        d.timestart, d.timefinish, su.userid, ss.statuscode as status
-                                  FROM {$CFG->prefix}facetoface_sessions_dates d
-                                  JOIN {$CFG->prefix}facetoface_sessions s ON s.id = d.sessionid
-                                  JOIN {$CFG->prefix}facetoface f ON f.id = s.facetoface
-                                  JOIN {$CFG->prefix}facetoface_signups su ON su.sessionid = s.id
-                                  JOIN {$CFG->prefix}facetoface_signups_status ss ON su.id = ss.signupid AND ss.superceded = 0
-                                  JOIN {$CFG->prefix}course c ON f.course = c.id
+                                  FROM {facetoface_sessions_dates} d
+                                  JOIN {facetoface_sessions} s ON s.id = d.sessionid
+                                  JOIN {facetoface} f ON f.id = s.facetoface
+                                  JOIN {facetoface_signups} su ON su.sessionid = s.id
+                                  JOIN {facetoface_signups_status} ss ON su.id = ss.signupid AND ss.superceded = 0
+                                  JOIN {course} c ON f.course = c.id
                                  WHERE d.timestart >= $startdate AND d.timefinish <= $enddate AND
                                        su.userid = $user->id");
     add_location_info($signups);
@@ -89,8 +89,11 @@ if ($pastsessions and count($pastsessions) > 0) {
 $pagetitle = format_string(get_string('facetoface', 'facetoface') . ' ' . get_string('bookings', 'block_facetoface'));
 $navlinks[] = array('name' => $pagetitle, 'link' => '', 'type' => 'activityinstance');
 $navigation = build_navigation($navlinks);
-print_header_simple($pagetitle, '', $navigation);
-print_box_start();
+$PAGE->set_title($pagetitle);
+$PAGE->set_heading('');
+/* SCANMSG: may be additional work required for $navigation variable */
+echo $OUTPUT->header();
+echo $OUTPUT->box_start();
 
 // show tabs
 $currenttab = 'attending';
@@ -101,17 +104,22 @@ if (empty($users)) {
     // Date range form
     print '<form method="get" action=""><p>';
     print get_string('daterange', 'block_facetoface') . ' ';
-    print_date_selector('startday', 'startmonth', 'startyear', $startdate);
+    echo html_writer::select_time('days', 'startday', $startdate);
+    echo html_writer::select_time('months', 'startmonth', $startdate);
+    echo html_writer::select_time('years', 'startyear', $startdate);
+
     print ' to ';
-    print_date_selector('endday', 'endmonth', 'endyear', $enddate);
+    echo html_writer::select_time('days', 'endday', $enddate);
+    echo html_writer::select_time('months', 'endmonth', $enddate);
+    echo html_writer::select_time('years', 'startyear', $enddate);
     print ' <input type="hidden" value="'.$userid.'" name="userid" />';
     print ' <input type="submit" value="'.get_string('apply', 'block_facetoface').'" /></p></form>';
 
     // Show sign-ups
     if ($userid != $USER->id) {
-        print_heading(get_string('futurebookingsfor', 'block_facetoface', fullname($user)));
+        echo $OUTPUT->heading(get_string('futurebookingsfor', 'block_facetoface', fullname($user)));
     } else {
-        print_heading(get_string('futurebookings', 'block_facetoface'));
+        echo $OUTPUT->heading(get_string('futurebookings', 'block_facetoface'));
     }
     if ($nbfuture > 0) {
         print_dates($futuresessions, false, false, true);
@@ -122,9 +130,9 @@ if (empty($users)) {
 
     // Show past bookings
     if ($userid != $USER->id) {
-        print_heading(get_string('pastbookingsfor', 'block_facetoface', fullname($user)));
+        echo $OUTPUT->heading(get_string('pastbookingsfor', 'block_facetoface', fullname($user)));
     } else {
-        print_heading(get_string('pastbookings', 'block_facetoface'));
+        echo $OUTPUT->heading(get_string('pastbookings', 'block_facetoface'));
     }
     if ($nbpast > 0) {
         print_dates($pastsessions, false, true);
@@ -134,14 +142,14 @@ if (empty($users)) {
     }
 } else if ($users) {
     if (count($users) > 0) {
-        print_heading(get_string('searchedusers','block_facetoface', count($users)));
+        echo $OUTPUT->heading(get_string('searchedusers','block_facetoface', count($users)));
         foreach ($users as $u) {
             print '<a href="'.$CFG->wwwroot.'/blocks/facetoface/mysignups.php?'.$urlparams.'&amp;userid='.$u->id.'">'.fullname($u).'</a><br />';
         }
     }
 }
 
-print_heading(get_string('searchusers', 'block_facetoface'));
+echo $OUTPUT->heading(get_string('searchusers', 'block_facetoface'));
 
 echo '<form class="learnersearch" id="searchquery" method="post" action="'.$CFG->wwwroot.'/blocks/facetoface/mysignups.php">';
 echo '<div class="usersearch">';
@@ -156,5 +164,6 @@ echo '<input type="submit" value="Search" />';
 echo '</div>';
 echo '</form>';
 
-print_box_end();
-print_footer();
+echo $OUTPUT->box_end();
+echo $OUTPUT->print_footer();
+

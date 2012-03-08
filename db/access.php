@@ -30,16 +30,16 @@
 //
 // For the core capabilities, the variable is $moodle_capabilities.
 
-$block_facetoface_capabilities = array(
+$capabilities = array(
 
     'block/facetoface:viewbookings' => array(
 
         'captype' => 'view',
         'contextlevel' => CONTEXT_USER,
-        'legacy' => array(
+        'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'admin' => CAP_ALLOW
+            'manager' => CAP_ALLOW
         )
     )
 
