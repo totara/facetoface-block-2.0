@@ -1,6 +1,7 @@
 -----------------------------------------------------------------------------
 Face-to-face block for Moodle
-Copyright (C) 2008 Catalyst IT (http://www.catalyst.net.nz)
+Copyright (C) 2008 - 2009 Catalyst IT (http://www.catalyst.net.nz)
+Copyright (C) 2010 - 2012 Totara LMS LTD (http://www.totaralms.com)
 
 This program is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -27,7 +28,7 @@ of all sessions and user bookings.
 Requirements
 -------------
 
-* Moodle 1.9
+* Moodle 2.2
 * Face-to-face module
 
 

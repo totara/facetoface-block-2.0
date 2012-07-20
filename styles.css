@@ -1,10 +1,10 @@
-body.blocks-facetoface table.f2fsession td.c0 {
+body.path-block-facetoface table.f2fsession td.c0 {
     font-weight: bold;
 }
-body.blocks-facetoface table.f2fsession td.c1 {
+body.path-block-facetoface table.f2fsession td.c1 {
     width: 100%;
 }
-body.blocks-facetoface h2.main, body.blocks-facetoface h3.main {
+body.path-block-facetoface h2.main, body.blocks-facetoface h3.main {
     text-align: left;
 }
 
@@ -14,6 +14,10 @@ div#calendarcontainer div.monthlycalendar div.calendar-controls {
 
 div#calendarcontainer div.monthlycalendar div.calendar-controls a {
     font-size: 1.5em;
+    width: 100%;
+}
+
+div#calendarcontainer div.monthlycalendar div.calendar-controls table {
     width: 100%;
 }
 
@@ -27,11 +31,19 @@ div#calendarcontainer div.monthlycalendar table.calendarmonth {
 }
 
 div#calendarcontainer div.monthlycalendar table.calendarmonth td {
-vertical-align: top;
+    vertical-align: top;
     padding: 5px;
     border: 1px solid;
     width: 14%;
     height: 10em;
+}
+
+body.path-blocks-facetoface table {
+    width: 100%;
+}
+
+body.path-blocks-facetoface table th {
+    text-align: left;
 }
 
 div.monthlycalendar {
@@ -73,7 +85,7 @@ div.calendarfilters table.generaltable .cell {
 }
 
 /* yui-based tooltips */
-body#blocks-facetoface-calendar .yui-tt .bd {
+body#page-blocks-facetoface-calendar .yui-tt .bd {
     background-color:#F6E3CE;
     border-color:#F7BE81;
     border-style:solid;
@@ -85,7 +97,7 @@ body#blocks-facetoface-calendar .yui-tt .bd {
     top:0;
     z-index:1;
 }
-body#blocks-facetoface-calendar .yui-tt-shadow {
+body#page-blocks-facetoface-calendar .yui-tt-shadow {
     background-color:#CCCCCC;
     bottom:-3px;
     left:3px;
@@ -93,8 +105,8 @@ body#blocks-facetoface-calendar .yui-tt-shadow {
     top:2px;
     position:absolute;
 }
-body#blocks-facetoface-calendar .yui-overlay,
-body#blocks-facetoface-calendar .yui-panel-container {
+body#page-blocks-facetoface-calendar .yui-overlay,
+body#page-blocks-facetoface-calendar .yui-panel-container {
     position:absolute;
     visibility:hidden;
     z-index:2;

@@ -17,6 +17,7 @@ $string['signedupin'] = 'Vous avez réservé dans les sessions suivantes :';
 $string['signedupinzero'] = 'Aucune réservation trouvée dans cette plage de dates.';
 $string['upcomingsessions'] = 'Prochaines sessions';
 $string['viewexportsessions'] = 'Afficher/exporter les sessions';
-$string['xrecords'] = '$a entrées';
+$string['xrecords'] = '{$a} entrées';
 
 ?>
+

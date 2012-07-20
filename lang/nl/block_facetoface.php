@@ -17,7 +17,8 @@ $string['signedupin'] = 'U bent aangemeld als deelnemers bij de volgende sessies
 $string['signedupinzero'] = 'Er konden geen aanmeldingen worden binnen dit datum bereik.';
 $string['upcomingsessions'] = 'Komende sessies';
 $string['viewexportsessions'] = 'Bekijk/Exporteer sessies';
-$string['xrecords'] = '$a velden';
-$string['xrecords'] = '$a records';
+$string['xrecords'] = '{$a} velden';
+$string['xrecords'] = '{$a} records';
 
 ?>
+

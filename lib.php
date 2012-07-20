@@ -1,89 +1,31 @@
 <?php
-
-require_once('../../mod/facetoface/lib.php');
-define('TRAINER_CACHE_TIMEOUT',15); // in minutes
-
-/**
- * Print the session dates in a nicely formatted table.
+/*
+ * This file is part of Totara LMS
+ *
+ * Copyright (C) 2009 Catalyst IT LTD
+ * Copyright (C) 2010 - 2012 Totara Learning Solutions LTD
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @author Alastair Munro <alastair.munro@totaralms.com>
+ * @author Francois Marier <francois@catalyst.net.nz>
+ * @package blocks
+ * @subpackage facetoface
  */
-function print_dates($dates, $includebookings, $includegrades=false, $includestatus=false, $includecourseid=false, $includetrainers=false) {
-    global $CFG, $USER;
 
-    $courselink = $CFG->wwwroot.'/course/view.php?id=';
-    $facetofacelink = $CFG->wwwroot.'/mod/facetoface/view.php?f=';
-    $attendeelink = $CFG->wwwroot.'/mod/facetoface/attendees.php?s=';
-    $bookinghistorylink = $CFG->wwwroot.'/blocks/facetoface/bookinghistory.php?session=';
-
-    print '<table border="1" cellpadding="5" summary="'.get_string('sessiondatestable', 'block_facetoface').'"><tr>';
-
-    // include the course id in the display
-    if ($includecourseid) {
-        print '<th>'.get_string('idnumbercourse').'</th>';
-    }
-
-    print '<th>'.get_string('course').'</th>';
-    print '<th>'.get_string('name').'</th>';
-    print '<th>'.get_string('location').'</th>';
-    print '<th>'.get_string('date','block_facetoface').'</th>';
-    print '<th>'.get_string('time', 'block_facetoface').'</th>';
-    if ($includebookings) {
-        print '<th>'.get_string('nbbookings', 'block_facetoface').'</th>';
-    }
-
-    // include the grades/status in the display
-    if ($includegrades || $includestatus) {
-        print '<th>'.get_string('status').'</th>';
-    }
-
-    print '</tr>';
-    $even = false; // used to colour rows
-    foreach ($dates as $date) {
-
-        // include the grades in the display
-        if ($includegrades) {
-            $grade = facetoface_get_grade($date->userid, $date->courseid, $date->facetofaceid);
-        }
-
-        if ($even) {
-            print '<tr style="background-color: #CCCCCC" valign="top">';
-        }
-        else {
-            print '<tr valign="top">';
-        }
-        $even = !$even;
-        if ($includecourseid) {
-            print '<td>'.$date->cidnumber.'</td>';
-        }
-        print '<td><a href="'.$courselink.$date->courseid.'">'.format_string($date->coursename).'</a></td>';
-
-        print '<td><a href="'.$facetofacelink.$date->facetofaceid.'">'.format_string($date->name).'</a></td>';
-        $location = isset($date->location) ? $date->location : '';
-        print '<td>'.format_string($location).'</td>';
-        print '<td>';
-        foreach ($date->alldates as $sessiondate) {
-            print userdate($sessiondate->timestart, '%d %B %Y').'<br />';
-        }
-        print '</td>';
-        print '<td>';
-        foreach ($date->alldates as $sessiondate) {
-            print userdate($sessiondate->timestart, '%I:%M %p').' - '.userdate($sessiondate->timefinish, '%I:%M %p').'<br />';
-        }
-        print '</td>';
-        if ($includebookings) {
-            print '<td><a href="'.$attendeelink.$date->sessionid.'">'.(isset($date->nbbookings)? format_string($date->nbbookings) : 0).'</a></td>';
-        }
-
-        // include the grades/status in the display
-        foreach (array($includegrades, $includestatus) as $col) {
-            if ($col) {
-                print '<td><a href="'.$bookinghistorylink.$date->sessionid.'&amp;userid='.$date->userid.'">'.ucfirst(facetoface_get_status($date->status)).'</a></td>';
-            }
-        }
-
-        print '</tr>';
-    }
-    print '</table>';
-}
+require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+define('TRAINER_CACHE_TIMEOUT', 15); // in minutes
 
 /**
  * Group the Session dates together instead of having separate sessions
@@ -117,6 +59,7 @@ function group_session_dates($sessions) {
            $retarray[$session->sessionid]->status = $session->status;
         }
 
+        $alldates[$session->id] = new stdClass();
         $alldates[$session->id]->timestart = $session->timestart;
         $alldates[$session->id]->timefinish = $session->timefinish;
         $retarray[$session->sessionid]->alldates = $alldates;
@@ -191,7 +134,7 @@ function export_spreadsheet($dates, $format, $includebookings) {
     // Heading (first row)
     $worksheet->write_string(0, 0, get_string('course'));
     $worksheet->write_string(0, 1, get_string('name'));
-    $worksheet->write_string(0, 2, get_string('location'));
+    //$worksheet->write_string(0, 2, get_string('location'));
     $worksheet->write_string(0, 3, get_string('timestart', 'facetoface'));
     $worksheet->write_string(0, 4, get_string('timefinish', 'facetoface'));
     if ($includebookings) {
@@ -205,7 +148,8 @@ function export_spreadsheet($dates, $format, $includebookings) {
 
             $worksheet->write_string($i, 0, $date->coursename);
             $worksheet->write_string($i, 1, $date->name);
-            $worksheet->write_string($i, 2, $date->location);
+            // TODO: make export gracefully handle location not existing
+            //$worksheet->write_string($i, 2, $date->location);
             if ('ods' == $format) {
                 $worksheet->write_date($i, 3, $date->timestart);
                 $worksheet->write_date($i, 4, $date->timefinish);
@@ -233,96 +177,37 @@ function export_spreadsheet($dates, $format, $includebookings) {
 function get_users_search($search) {
     global $CFG, $DB;
 
-    //to allow case-insensitive search for postgesql
-    if ($DB->get_dbfamily == 'postgres') {
-        $LIKE = 'ILIKE';
-    } else {
-        $LIKE = 'LIKE';
-    }
-
-    $usernamesearch = '';
-    $emailsearch = '';
-    $fullnamesearch = '';
-    $firstnamesearch = '';
-    $lastnamesearch = '';
-
     $searchvalues = split(' ',trim($search));
-    $sort='firstname, lastname, username, email ASC';
+    $sort = 'firstname, lastname, username, email ASC';
+    $searchfields = array('firstname', 'lastname', 'username', 'email');
 
-    foreach ($searchvalues as $searchterm) {
+    list($where, $searchparams) = facetoface_search_get_keyword_where_clause($searchvalues, $searchfields);
+    $sql = "SELECT u.* FROM {user} u WHERE {$where} ORDER BY {$sort}";
 
-        if ($usernamesearch) {
-            $usernamesearch .= ' AND ';
-        }
-        if ($emailsearch) {
-            $emailsearch .= ' AND ';
-        }
-        if (count($searchvalues) >= 2) {
-            if ($fullnamesearch) {
-                $fullnamesearch .= " $searchterm";
-            } else {
-                $fullnamesearch .= $DB->sql_fullname() ." $LIKE '%$searchterm";
-            }
-        }
-        if (count($searchvalues) < 2) {
-            $firstnamesearch .= ' firstname ' . $LIKE .' \'%'. $searchterm .'%\' ';
-            $lastnamesearch .= ' lastname ' . $LIKE .' \'%'. $searchterm .'%\' ';
-        }
+    $records = $DB->get_records_sql($sql, $searchparams);
 
-        $usernamesearch .= ' username ' . $LIKE .' \'%'. $searchterm .'%\' ';
-        $emailsearch .= ' email ' . $LIKE .' \'%'. $searchterm .'%\' ';
-    }
-
-    // if fullnamesearch append the end for the string
-    if ($fullnamesearch) {
-        $fullnamesearch .= '%\'';
-    }
-
-    $sql = "SELECT u.*
-            FROM {user} u
-            WHERE (( $usernamesearch ) OR ( $emailsearch )) ";
-
-    if ($fullnamesearch) {
-        $sql .= " OR ( $fullnamesearch ) ";
-    }
-
-    if ($firstnamesearch) {
-        $sql .= " OR ( $firstnamesearch ) ";
-    }
-
-    if ($lastnamesearch) {
-        $sql .= " OR ( $lastnamesearch ) ";
-    }
-
-    $sql .= " ORDER BY " . $sort;
-
-    if ($records = $DB->get_records_sql($sql)) {
-        return $records;
-    } else {
-        return array();
-    }
+    return $records;
 }
 
 /**
  * Add the location info
  */
-function add_location_info(&$sessions)
-{
-    global $CFG;
+function add_location_info(&$sessions) {
+    global $CFG, $DB;
 
     if (!$sessions) {
-        return;
+        return false;
     }
 
     $locationfieldid = $DB->get_field('facetoface_session_field', 'id', array('shortname' => 'location'));
     if (!$locationfieldid) {
-        return array();
+        return false;
     }
 
-    $alllocations = $DB->get_records_sql("SELECT d.sessionid, d.data
+    $alllocations = $DB->get_records_sql('SELECT d.sessionid, d.data
               FROM {facetoface_sessions} s
               JOIN {facetoface_session_data} d ON d.sessionid = s.id
-             WHERE d.fieldid = $locationfieldid");
+             WHERE d.fieldid = ?', array($locationfieldid));
 
     foreach ($sessions as $session) {
         if (!empty($alllocations[$session->sessionid])) {
@@ -332,6 +217,8 @@ function add_location_info(&$sessions)
             $session->location = '';
         }
     }
+
+    return true;
 }
 
 /**
@@ -341,9 +228,8 @@ function add_location_info(&$sessions)
  * @param int $currentvalue
  * @param boolean $return
  */
-function print_facetoface_filters($startdate, $enddate, $currentcoursename, $currentcourseid,$currentlocation, $currenttrainer)
-{
-    global $CFG;
+function print_facetoface_filters($startdate, $enddate, $currentcoursename, $currentcourseid, $currentlocation, $currenttrainer) {
+    global $CFG, $DB;
 
     $coursenames = array();
     $sessions = array();
@@ -351,15 +237,13 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
     $courseids = array();
     $trainers = array();
 
-    $results = $DB->get_records_sql("SELECT c.id as courseid, c.idnumber, c.fullname, s.id AS sessionid,
-                                       f.id AS facetofaceid, cm.id AS cmid
+    $results = $DB->get_records_sql("SELECT s.id AS sessionid, c.id as courseid, c.idnumber, c.fullname,
+                                       f.id AS facetofaceid
                                     FROM {course} c
                                     JOIN {facetoface} f ON f.course = c.id
                                     JOIN {facetoface_sessions} s ON f.id = s.facetoface
-                                    JOIN {course_modules} cm ON cm.course = f.course
-                                         AND cm.instance = f.id
                                     WHERE c.visible = 1
-                                    GROUP BY c.id, c.idnumber, c.fullname, s.id, f.id, cm.id
+                                    GROUP BY c.id, c.idnumber, c.fullname, s.id, f.id
                                     ORDER BY c.fullname ASC");
 
     add_location_info($results);
@@ -400,32 +284,27 @@ function print_facetoface_filters($startdate, $enddate, $currentcoursename, $cur
     // Build or print result
     $table = new html_table();
     $table->tablealign = 'left';
-    $table->data[] = array('<label for="menustartdate">'.get_string('daterange', 'block_facetoface').'</label>',
+    $table->data[] = array(html_writer::tag('label', get_string('daterange', 'block_facetoface'), array('for' => 'menustartdate')),
                            html_writer::select_time('days', 'startday', $startdate) .
-                           html_writer::select_time('days', 'startmonth', $startdate) .
-                           html_writer::select_time('days', 'startyear', $startdate) . ' to ' .
+                           html_writer::select_time('months', 'startmonth', $startdate) .
+                           html_writer::select_time('years', 'startyear', $startdate) . ' ' . strtolower(get_string('to')) . ' ' .
                            html_writer::select_time('days', 'endday', $enddate) .
                            html_writer::select_time('months', 'endmonth', $enddate) .
-                           html_writer::select_time('years', 'startyear', $enddate));
-    $coursenameselect = moodle_select::make($coursenames, 'coursename', $currentcoursename);
-    $coursenameselect->nothinglabel = get_string('all');
-    $coursenameselect->nothingvalue = '';
-    $table->data[] = array('<label for="menucoursename">'.get_string('coursefullname','block_facetoface').': </label>',
-                           $OUTPUT->select($coursenameselect);
-    $locationselect = moodle_select::make($locations, 'location', $currentlocation);
-    $locationselect->nothinglabel = get_string('all');
-    $locationselect->nothingvalue = '';
-    $table->data[] = array('<label for="menulocation">'.get_string('location', 'facetoface').': </label>',
-                           $OUTPUT->select($locationselect);
+                           html_writer::select_time('years', 'endyear', $enddate));
+    $table->data[] = array(html_writer::tag('label', get_string('coursefullname','block_facetoface').':', array('for' => 'menucoursename')),
+                           html_writer::select($coursenames, 'coursename', $currentcoursename, array('' => get_string('all'))));
+    if ($locations) {
+        $table->data[] = array(html_writer::tag('label', get_string('location', 'facetoface').':', array('for' => 'menulocation')),
+            html_writer::select($locations, 'location', $currentlocation, array('' => get_string('all'))));
+    }
     echo html_writer::table($table);
 }
 
 /**
  * Add the trainer info
  */
-function add_trainer_info(&$sessions)
-{
-    global $CFG;
+function add_trainer_info(&$sessions) {
+    global $CFG, $DB;
 
     $moduleid = $DB->get_field('modules', 'id', array('name' => 'facetoface'));
     $alltrainers = array(); // all possible trainers for filter dropdown
@@ -439,14 +318,14 @@ function add_trainer_info(&$sessions)
 
         // get trainers for this session from session_roles table
         // set to null if trainer role id not found
-        $sess_trainers = (isset($trainerroleid)) ? $DB->get_records_select('facetoface_session_roles',"sessionid={$session->sessionid} and roleid={$trainerroleid}") : null;
+        $sess_trainers = (isset($trainerroleid)) ? $DB->get_records_select('facetoface_session_roles', "sessionid = ? AND roleid = ?", array($session->sessionid, $trainerroleid)) : null;
 
         // check if the module instance has already had trainer info added
         if (!array_key_exists($session->cmid, $alltrainers)) {
-            $context = get_context_instance(CONTEXT_MODULE, $session->cmid);
+            $context = context_module::instance($session->cmid);
 
-            if($sess_trainers && is_array($sess_trainers)) {
-                foreach($sess_trainers as $sess_trainer) {
+            if ($sess_trainers && is_array($sess_trainers)) {
+                foreach ($sess_trainers as $sess_trainer) {
                     $user = $DB->get_record('user', array('id' => $sess_trainer->userid));
                     $fullname = fullname($user);
                     if (!array_key_exists($fullname, $sessiontrainers)) {
@@ -478,3 +357,39 @@ function add_trainer_info(&$sessions)
 
 }
 
+/**
+ * Return an SQL WHERE clause to search for the given keywords
+ *
+ * @param array $keywords Array of strings to search for
+ * @param array $fields Array of SQL fields to search against
+ * @param int $type bound param type SQL_PARAMS_QM or SQL_PARAMS_NAMED
+ * @param string $prefix named parameter placeholder prefix (unique counter value is appended to each parameter name)
+ *
+ * @return array Containing SQL WHERE clause and parameters
+ */
+function facetoface_search_get_keyword_where_clause($keywords, $fields, $type=SQL_PARAMS_QM, $prefix='param') {
+    global $DB;
+
+    $queries = array();
+    $params = array();
+    static $FACETOFACE_SEARCH_PARAM_COUNTER = 1;
+    foreach ($keywords as $keyword) {
+        $matches = array();
+        foreach ($fields as $field) {
+            if ($type == SQL_PARAMS_QM) {
+                $matches[] = $DB->sql_like($field, '?', false);
+                $params[] = '%' . $DB->sql_like_escape($keyword) . '%';
+            } else {
+                $paramname = $prefix . $FACETOFACE_SEARCH_PARAM_COUNTER;
+                $matches[] = $DB->sql_like($field, ":$paramname", false);
+                $params[$paramname] = '%' . $DB->sql_like_escape($keyword) . '%';
+
+                $FACETOFACE_SEARCH_PARAM_COUNTER++;
+            }
+        }
+        // look for each keyword in any field
+        $queries[] = '(' . implode(' OR ', $matches) . ')';
+    }
+    // all keywords must be found in at least one field
+    return array(implode(' AND ', $queries), $params);
+}

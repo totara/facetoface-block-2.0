@@ -1,6 +1,31 @@
 <?php
-require_once '../../config.php';
-require_once "$CFG->dirroot/calendar/lib.php";
+/*
+ * This file is part of Totara LMS
+ *
+ * Copyright (C) 2009 Catalyst IT LTD
+ * Copyright (C) 2010 - 2012 Totara Learning Solutions LTD
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @author Alastair Munro <alastair.munro@totaralms.com>
+ * @author Francois Marier <francois@catalyst.net.nz>
+ * @package blocks
+ * @subpackage facetoface
+ */
+
+require_once(dirname(dirname(dirname(__FILE))) . '/config.php');
+require_once($CFG->dirroot . '/calendar/lib.php');
 
 $var        = required_param('var', PARAM_ALPHA);
 $currenttab = required_param('tab', PARAM_ALPHA);
@@ -29,4 +54,4 @@ case 'showuser':
     break;
 }
 
-redirect("calendar.php?tab=$currenttab&amp;cal_d=$day&amp;cal_m=$month&amp;cal_y=$year");
+redirect(new moodle_url('/blocks/facetoface/calendar.php', array('tab' => $currenttab, 'cal_d' => $day, 'cal_m' => $month, 'cal_y' => $year)));
